@@ -6,11 +6,21 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 
 export default function AdminDashboard({ onClose }) {
   const { user } = useAppStore()
-  const [stats, setStats] = useState(null)
+  const [stats, setStats] = useState({
+    total_rides: 0,
+    completed_rides: 0,
+    total_revenue: 0,
+    total_stars_revenue: 0,
+    active_drivers: 0,
+    avg_rating: 5.0
+  })
   const [revenue, setRevenue] = useState([])
   const [pending, setPending] = useState([])
   const [activeTab, setActiveTab] = useState('overview')
-  const [dateRange, setDateRange] = useState({ from: new Date(Date.now() - 30 * 86400000).toISOString().split('T')[0], to: new Date().toISOString().split('T')[0] })
+  const [dateRange, setDateRange] = useState({ 
+    from: new Date(Date.now() - 30 * 86400000).toISOString().split('T')[0], 
+    to: new Date().toISOString().split('T')[0] 
+  })
   const [loading, setLoading] = useState(false)
 
   useEffect(() => { fetchStats() }, [dateRange])
@@ -18,7 +28,7 @@ export default function AdminDashboard({ onClose }) {
   const fetchStats = async () => {
     setLoading(true)
     const { data } = await supabase.rpc('get_dashboard_stats', { from_date: `${dateRange.from}`, to_date: `${dateRange.to}` })
-    setStats(data?.[0] || {})
+    if (data && data[0]) setStats(data[0])
     const { data: rev } = await supabase.rpc('get_revenue_report', { from_date: `${dateRange.from}`, to_date: `${dateRange.to}` })
     setRevenue(rev || [])
     setLoading(false)
@@ -53,12 +63,12 @@ export default function AdminDashboard({ onClose }) {
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 16, marginBottom: 30 }}>
-        <div style={{ background: 'white', padding: 20, borderRadius: 16 }}><h3>{stats.total_rides || 0}</h3><p>إجمالي الرحلات</p></div>
-        <div style={{ background: 'white', padding: 20, borderRadius: 16 }}><h3>{stats.completed_rides || 0}</h3><p>مكتملة</p></div>
-        <div style={{ background: 'white', padding: 20, borderRadius: 16 }}><h3>{formatPrice(stats.total_revenue || 0)}</h3><p>نقدي</p></div>
-        <div style={{ background: 'white', padding: 20, borderRadius: 16 }}><h3>{formatStarsPrice(stats.total_stars_revenue || 0)}</h3><p>نجوم</p></div>
-        <div style={{ background: 'white', padding: 20, borderRadius: 16 }}><h3>{stats.active_drivers || 0}</h3><p>سائقين نشطين</p></div>
-        <div style={{ background: 'white', padding: 20, borderRadius: 16 }}><h3>{stats.avg_rating?.toFixed(1) || '5.0'}/5</h3><p>متوسط التقييم</p></div>
+        <div style={{ background: 'white', padding: 20, borderRadius: 16 }}><h3>{stats.total_rides}</h3><p>إجمالي الرحلات</p></div>
+        <div style={{ background: 'white', padding: 20, borderRadius: 16 }}><h3>{stats.completed_rides}</h3><p>مكتملة</p></div>
+        <div style={{ background: 'white', padding: 20, borderRadius: 16 }}><h3>{formatPrice(stats.total_revenue)}</h3><p>نقدي</p></div>
+        <div style={{ background: 'white', padding: 20, borderRadius: 16 }}><h3>{formatStarsPrice(stats.total_stars_revenue)}</h3><p>نجوم</p></div>
+        <div style={{ background: 'white', padding: 20, borderRadius: 16 }}><h3>{stats.active_drivers}</h3><p>سائقين نشطين</p></div>
+        <div style={{ background: 'white', padding: 20, borderRadius: 16 }}><h3>{stats.avg_rating?.toFixed(1)}/5</h3><p>متوسط التقييم</p></div>
       </div>
 
       <div style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
