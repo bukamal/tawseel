@@ -8,6 +8,6 @@
     "skipLibCheck": true,
     "outDir": "./dist"
   },
-  "include": ["api/**/*", "lib/**/*"],
+  "include": ["api/**/*", "lib/**/*", "middleware/**/*"],
   "exclude": ["node_modules"]
 }

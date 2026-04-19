@@ -92,7 +92,7 @@ function App() {
 
       <div className="bottom-sheet">
         {user?.role === 'driver' ? (
-          <DriverMode />
+          <DriverMode isAdmin={isAdmin} onOpenAdmin={() => setShowAdmin(true)} />
         ) : activeRide ? (
           <ActiveRide />
         ) : (

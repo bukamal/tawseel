@@ -50,54 +50,6 @@ html, body, #root {
   z-index: 1;
 }
 
-/* تنسيقات عامة */
-.btn {
-  padding: 14px 24px;
-  border-radius: 14px;
-  font-weight: 600;
-  font-size: 16px;
-  border: none;
-  cursor: pointer;
-  transition: all 0.2s;
-  width: 100%;
-}
-
-.btn-primary {
-  background: #007AFF;
-  color: white;
-}
-
-.btn-primary:disabled {
-  background: #ccc;
-  cursor: not-allowed;
-}
-
-.btn-danger {
-  background: #FF3B30;
-  color: white;
-}
-
-.btn-success {
-  background: #34C759;
-  color: white;
-}
-
-.spinner {
-  border: 3px solid #f3f3f3;
-  border-top: 3px solid #007AFF;
-  border-radius: 50%;
-  width: 40px;
-  height: 40px;
-  animation: spin 1s linear infinite;
-  margin: 20px auto;
-}
-
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-/* شريط الأيقونات العلوي */
 .top-bar {
   position: fixed;
   top: 16px;
@@ -125,6 +77,117 @@ html, body, #root {
   justify-content: center;
 }
 
-.icon-btn:hover {
-  background: rgba(0,0,0,0.05);
+.btn {
+  padding: 14px 24px;
+  border-radius: 14px;
+  font-weight: 600;
+  font-size: 16px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+  width: 100%;
+}
+
+.btn-primary {
+  background: #007AFF;
+  color: white;
+}
+
+.btn-primary:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+.btn-danger {
+  background: #FF3B30;
+  color: white;
+}
+
+.spinner {
+  border: 3px solid #f3f3f3;
+  border-top: 3px solid #007AFF;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  animation: spin 1s linear infinite;
+  margin: 20px auto;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Onboarding */
+.onboarding-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.step {
+  background: white;
+  padding: 40px;
+  border-radius: 20px;
+  width: 100%;
+  max-width: 400px;
+  text-align: center;
+}
+
+.role-selection {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.role-selection button {
+  padding: 20px;
+  border: 2px solid #007AFF;
+  background: white;
+  border-radius: 12px;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+/* Driver Mode */
+.driver-verification {
+  padding: 40px 20px;
+  text-align: center;
+}
+
+.verification-icon {
+  font-size: 56px;
+  margin-bottom: 20px;
+}
+
+/* Admin Dashboard */
+.admin-dashboard {
+  padding: 20px;
+  max-width: 1400px;
+  margin: 0 auto;
+  height: 100vh;
+  overflow-y: auto;
+  background: #F5F7FA;
+}
+
+.admin-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 16px;
+  margin-bottom: 30px;
+}
+
+.stat-card {
+  background: white;
+  border-radius: 20px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
 }

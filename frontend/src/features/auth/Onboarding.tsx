@@ -9,24 +9,14 @@ export default function Onboarding() {
   const [step, setStep] = useState(1)
   const [role, setRole] = useState<'customer' | 'driver'>('customer')
   const [phone, setPhone] = useState('')
-  const [vehicleInfo, setVehicleInfo] = useState({
-    type: 'economy',
-    model: '',
-    color: '',
-    plate: '',
-    license: ''
-  })
+  const [vehicleInfo, setVehicleInfo] = useState({ type: 'economy', model: '', color: '', plate: '', license: '' })
   const [licensePhoto, setLicensePhoto] = useState<File | null>(null)
   const [vehiclePhoto, setVehiclePhoto] = useState<File | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState('')
   const { setUser } = useAppStore()
 
-  const handleRoleSelect = (selected: 'customer' | 'driver') => {
-    hapticFeedback('medium')
-    setRole(selected)
-    setStep(2)
-  }
+  const handleRoleSelect = (selected: 'customer' | 'driver') => { hapticFeedback('medium'); setRole(selected); setStep(2) }
 
   const uploadPhoto = async (file: File, bucket: string, path: string): Promise<string> => {
     const ext = file.name.split('.').pop()
@@ -53,28 +43,14 @@ export default function Onboarding() {
       const res = await fetch(`${import.meta.env.VITE_API_URL}/api/users/update`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          telegram_id: telegramId,
-          chat_id: chatId,
-          full_name: tg?.initDataUnsafe?.user?.first_name + ' ' + (tg?.initDataUnsafe?.user?.last_name || ''),
-          phone: cleanPhone,
-          role
-        })
+        body: JSON.stringify({ telegram_id: telegramId, chat_id: chatId, full_name: tg?.initDataUnsafe?.user?.first_name + ' ' + (tg?.initDataUnsafe?.user?.last_name || ''), phone: cleanPhone, role })
       })
       if (!res.ok) throw new Error()
       const data = await res.json()
-      if (role === 'driver') {
-        setUser(data.user)
-        setStep(3)
-      } else {
-        setUser(data.user)
-      }
-    } catch {
-      setError('فشل الاتصال بالخادم')
-      showAlert('حدث خطأ أثناء الحفظ')
-    } finally {
-      setIsSubmitting(false)
-    }
+      if (role === 'driver') { setUser(data.user); setStep(3) }
+      else setUser(data.user)
+    } catch { setError('فشل الاتصال بالخادم'); showAlert('حدث خطأ أثناء الحفظ') }
+    finally { setIsSubmitting(false) }
   }
 
   const handleDriverRegistration = async () => {
@@ -93,11 +69,8 @@ export default function Onboarding() {
       if (!res.ok) throw new Error()
       const data = await res.json()
       setUser({ ...user, driver_id: data.driver.id, role: 'driver' })
-    } catch {
-      setError('فشل التسجيل')
-    } finally {
-      setIsSubmitting(false)
-    }
+    } catch { setError('فشل التسجيل') }
+    finally { setIsSubmitting(false) }
   }
 
   return (
@@ -127,20 +100,15 @@ export default function Onboarding() {
         {step === 3 && role === 'driver' && (
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="step">
             <h2>🚙 معلومات المركبة</h2>
-            <select value={vehicleInfo.type} onChange={e => setVehicleInfo({...vehicleInfo, type: e.target.value})}>
-              <option value="economy">اقتصادي</option>
-              <option value="comfort">مريح</option>
-              <option value="business">أعمال</option>
-              <option value="van">فان</option>
+            <select value={vehicleInfo.type} onChange={e => setVehicleInfo({ ...vehicleInfo, type: e.target.value })}>
+              <option value="economy">اقتصادي</option><option value="comfort">مريح</option><option value="business">أعمال</option><option value="van">فان</option>
             </select>
-            <input placeholder="الموديل" value={vehicleInfo.model} onChange={e => setVehicleInfo({...vehicleInfo, model: e.target.value})} />
-            <input placeholder="اللون" value={vehicleInfo.color} onChange={e => setVehicleInfo({...vehicleInfo, color: e.target.value})} />
-            <input placeholder="رقم اللوحة" value={vehicleInfo.plate} onChange={e => setVehicleInfo({...vehicleInfo, plate: e.target.value})} />
-            <input placeholder="رقم الرخصة" value={vehicleInfo.license} onChange={e => setVehicleInfo({...vehicleInfo, license: e.target.value})} />
-            <label>صورة الرخصة</label>
-            <input type="file" accept="image/*" onChange={e => setLicensePhoto(e.target.files?.[0] || null)} />
-            <label>صورة المركبة</label>
-            <input type="file" accept="image/*" onChange={e => setVehiclePhoto(e.target.files?.[0] || null)} />
+            <input placeholder="الموديل" value={vehicleInfo.model} onChange={e => setVehicleInfo({ ...vehicleInfo, model: e.target.value })} />
+            <input placeholder="اللون" value={vehicleInfo.color} onChange={e => setVehicleInfo({ ...vehicleInfo, color: e.target.value })} />
+            <input placeholder="رقم اللوحة" value={vehicleInfo.plate} onChange={e => setVehicleInfo({ ...vehicleInfo, plate: e.target.value })} />
+            <input placeholder="رقم الرخصة" value={vehicleInfo.license} onChange={e => setVehicleInfo({ ...vehicleInfo, license: e.target.value })} />
+            <label>صورة الرخصة</label><input type="file" accept="image/*" onChange={e => setLicensePhoto(e.target.files?.[0] || null)} />
+            <label>صورة المركبة</label><input type="file" accept="image/*" onChange={e => setVehiclePhoto(e.target.files?.[0] || null)} />
             {error && <p className="error">{error}</p>}
             <button onClick={handleDriverRegistration} disabled={isSubmitting}>{isSubmitting ? 'جاري...' : 'إكمال التسجيل'}</button>
           </motion.div>

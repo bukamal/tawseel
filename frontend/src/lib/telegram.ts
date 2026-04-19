@@ -11,32 +11,22 @@ export interface TelegramWebApp {
   close: () => void
   showAlert: (message: string) => void
   showConfirm: (message: string, callback: (confirmed: boolean) => void) => void
-  HapticFeedback?: {
-    impactOccurred: (style: 'light' | 'medium' | 'heavy') => void
-  }
+  HapticFeedback?: { impactOccurred: (style: 'light' | 'medium' | 'heavy') => void }
   initData: string
-  initDataUnsafe: {
-    user?: TelegramUser
-    query_id?: string
-    start_param?: string
-  }
+  initDataUnsafe: { user?: TelegramUser; query_id?: string; start_param?: string }
 }
 
 declare global {
   interface Window {
-    Telegram?: {
-      WebApp: TelegramWebApp
-    }
+    Telegram?: { WebApp: TelegramWebApp }
   }
 }
 
 export const initTelegram = () => {
   const tg = window.Telegram?.WebApp
   if (!tg) return null
-
   tg.ready()
   tg.expand()
-
   const params = new URLSearchParams(window.location.search)
   return {
     tg,
@@ -52,17 +42,11 @@ export const hapticFeedback = (type: 'light' | 'medium' | 'heavy' = 'light') => 
 }
 
 export const showAlert = (message: string) => {
-  if (window.Telegram?.WebApp) {
-    window.Telegram.WebApp.showAlert(message)
-  } else {
-    alert(message)
-  }
+  if (window.Telegram?.WebApp) window.Telegram.WebApp.showAlert(message)
+  else alert(message)
 }
 
 export const showConfirm = (message: string, callback: (confirmed: boolean) => void) => {
-  if (window.Telegram?.WebApp) {
-    window.Telegram.WebApp.showConfirm(message, callback)
-  } else {
-    callback(confirm(message))
-  }
+  if (window.Telegram?.WebApp) window.Telegram.WebApp.showConfirm(message, callback)
+  else callback(confirm(message))
 }
