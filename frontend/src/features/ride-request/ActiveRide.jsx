@@ -47,7 +47,7 @@ export default function ActiveRide() {
 
   return (
     <>
-      <motion.div initial={{ y: 100, opacity: 0 }} animate={{ y: 0, opacity: 1 }} style={{ padding: 20 }}>
+      <motion.div initial={{ y: 100, opacity: 0 }} animate={{ y: 0, opacity: 1 }} style={{ padding: 20, overflowY: "auto", maxHeight: "calc(75dvh - 60px)" }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
           <h3>{getStatusText(activeRide.status)}</h3>
           <span style={{ background: 'var(--color-gray-light)', padding: '6px 16px', borderRadius: 30, fontWeight: 600 }}>

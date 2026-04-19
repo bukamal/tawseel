@@ -125,7 +125,7 @@ export default function RideRequest() {
       initial={{ y: 100, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ type: 'spring', damping: 20, stiffness: 100 }}
-      className="ride-request"
+      className="ride-request" style={{ overflowY: "auto", maxHeight: "calc(75dvh - 60px)", paddingBottom: "20px" }} style={{ overflowY: "auto", maxHeight: "calc(75dvh - 60px)", paddingBottom: "20px" }}
     >
       <h3>🚗 اطلب توصيلة</h3>
 

@@ -82,7 +82,7 @@ export default function DriverMode({ isAdmin, onOpenAdmin }) {
 
   if (activeRide) {
     return (
-      <motion.div initial={{ y: 100, opacity: 0 }} animate={{ y: 0, opacity: 1 }} style={{ padding: 20 }}>
+      <motion.div initial={{ y: 100, opacity: 0 }} animate={{ y: 0, opacity: 1 }} style={{ padding: 20, overflowY: "auto", maxHeight: "calc(75dvh - 60px)" }}>
         <h3 style={{ marginBottom: 20 }}>🚗 رحلة نشطة</h3>
         <div className="request-card">
           <p><strong>الزبون:</strong> {activeRide.customer?.full_name}</p>
@@ -105,7 +105,7 @@ export default function DriverMode({ isAdmin, onOpenAdmin }) {
   }
 
   return (
-    <motion.div initial={{ y: 100, opacity: 0 }} animate={{ y: 0, opacity: 1 }} style={{ padding: 20 }}>
+    <motion.div initial={{ y: 100, opacity: 0 }} animate={{ y: 0, opacity: 1 }} style={{ padding: 20, overflowY: "auto", maxHeight: "calc(75dvh - 60px)" }}>
       <div className="driver-header">
         <h3>🚙 وضع السائق</h3>
         <Button

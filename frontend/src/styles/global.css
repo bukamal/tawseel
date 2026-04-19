@@ -665,3 +665,32 @@ button:disabled {
 .btn-warning:hover:not(:disabled) {
   background: #e68600;
 }
+
+/* =============================================
+   إصلاحات التمرير والاستجابة للشاشات الصغيرة
+   ============================================= */
+.bottom-sheet {
+  max-height: 75dvh !important;
+  overflow-y: auto !important;
+  padding: var(--space-md) var(--space-md) !important;
+}
+.ride-request, .driver-mode-container, .active-ride-container {
+  overflow-y: auto;
+  max-height: calc(75dvh - 60px);
+  padding-bottom: var(--space-lg);
+}
+@media (max-width: 480px) {
+  :root { --space-md: 12px; --space-lg: 18px; --space-xl: 24px; }
+  .step h1 { font-size: 28px; }
+  .step h2 { font-size: 22px; }
+  .price-total { font-size: 24px; }
+  .vehicle-grid { grid-template-columns: repeat(3, 1fr); gap: var(--space-xs); }
+}
+.vehicle-card { padding: var(--space-sm) var(--space-xs); }
+.location-card { padding: var(--space-sm) var(--space-md); margin-bottom: var(--space-sm); }
+.bottom-sheet::-webkit-scrollbar { width: 4px; }
+.bottom-sheet::-webkit-scrollbar-thumb { background: var(--color-gray); border-radius: 10px; }
+.driver-verification, .driver-header + div { max-height: calc(75dvh - 100px); overflow-y: auto; }
+.step select, .step input { padding: var(--space-sm) var(--space-md); margin-bottom: var(--space-sm); }
+.step button { padding: var(--space-md) var(--space-lg); }
+.ride-request form, .ride-request > div { max-height: none; }
