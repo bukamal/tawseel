@@ -12,12 +12,18 @@ function App() {
   const { user, setUser, setLocation, isOnboarding, activeRide } = useAppStore()
   const [isAdmin, setIsAdmin] = useState(false)
   const [showAdmin, setShowAdmin] = useState(false)
+  const [debug, setDebug] = useState('')
 
   useEffect(() => {
     const tg = window.Telegram?.WebApp
     if (tg) { tg.ready(); tg.expand() }
     const params = new URLSearchParams(window.location.search)
     const telegramId = tg?.initDataUnsafe?.user?.id ?? params.get('tg_id')
+    
+    // عرض معلومات التشخيص
+    const adminIdsEnv = import.meta.env.VITE_ADMIN_TELEGRAM_IDS
+    setDebug(`telegramId: ${telegramId}, adminIds: ${adminIdsEnv || 'غير معرف'}`)
+    
     if (telegramId) fetchUser(telegramId)
 
     if (navigator.geolocation) {
@@ -44,6 +50,7 @@ function App() {
         {isAdmin && (
           <button onClick={() => setShowAdmin(true)} style={{ position: 'fixed', bottom: 20, left: 20, zIndex: 2000, padding: 12, background: '#5856D6', color: 'white', border: 'none', borderRadius: 30 }}>📊 لوحة التحكم</button>
         )}
+        {debug && <div style={{ position: 'fixed', top: 10, left: 10, background: 'rgba(0,0,0,0.7)', color: 'white', padding: 8, borderRadius: 8, zIndex: 9999 }}>{debug}</div>}
         {showAdmin && <AdminDashboard onClose={() => setShowAdmin(false)} />}
       </>
     )
@@ -62,6 +69,7 @@ function App() {
       <div className="bottom-sheet">
         {user?.role === 'driver' ? <DriverMode isAdmin={isAdmin} onOpenAdmin={() => setShowAdmin(true)} /> : activeRide ? <ActiveRide /> : <RideRequest />}
       </div>
+      {debug && <div style={{ position: 'fixed', bottom: 10, right: 10, background: 'rgba(0,0,0,0.7)', color: 'white', padding: 8, borderRadius: 8, zIndex: 9999 }}>{debug}</div>}
     </div>
   )
 }

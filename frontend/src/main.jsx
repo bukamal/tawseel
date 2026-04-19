@@ -1,7 +1,7 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import App from './App'
-import './styles/global.css'
+import './styles/global.css' // تأكيد المسار
 
 class ErrorBoundary extends React.Component {
   constructor(props) {
@@ -14,11 +14,9 @@ class ErrorBoundary extends React.Component {
   render() {
     if (this.state.hasError) {
       return (
-        <div style={{ color: 'white', padding: 20, background: '#1a1a1a', height: '100vh', overflow: 'auto' }}>
-          <h2 style={{ color: '#ff4d4f' }}>⚠️ خطأ في التطبيق</h2>
-          <pre style={{ color: '#ccc', direction: 'ltr', fontSize: 14 }}>
-            {this.state.error?.stack || this.state.error?.message}
-          </pre>
+        <div style={{ color: 'white', padding: 20, background: '#1a1a1a' }}>
+          <h2>خطأ في التطبيق</h2>
+          <pre>{this.state.error?.message}</pre>
         </div>
       )
     }
@@ -36,5 +34,5 @@ if (root) {
     </React.StrictMode>
   )
 } else {
-  document.body.innerHTML = '<div style="color:white;padding:20px;">Error: Root element not found</div>'
+  document.body.innerHTML = '<div style="color:white;padding:20px;">Root not found</div>'
 }
