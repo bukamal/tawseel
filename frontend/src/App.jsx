@@ -6,7 +6,6 @@ import Onboarding from './features/auth/Onboarding'
 import RideRequest from './features/ride-request/RideRequest'
 import DriverMode from './features/driver-mode/DriverMode'
 import ActiveRide from './features/ride-request/ActiveRide'
-// import NotificationsBell from './components/common/NotificationsBell'
 import AdminDashboard from './features/admin/AdminDashboard'
 import Button from './components/atoms/Button'
 
@@ -53,11 +52,6 @@ function App() {
   return (
     <div className="app">
       <div className="top-bar">
-        {/* <NotificationsBell /> */}
-//         {isAdmin && (
-//           <button className="icon-btn" onClick={() => setShowAdmin(true)}>📊</button>
-        )}
-        {/* <button className="icon-btn" onClick={() => useAppStore.getState().logout()}>🚪</button> */}
       </div>
       <div className="map-container">
         <Map />
