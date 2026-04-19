@@ -41,10 +41,7 @@ function App() {
   if (isOnboarding) {
     return (
       <>
-        <Onboarding />
-        {isAdmin && (
-          <button onClick={() => setShowAdmin(true)} style={{ position: 'fixed', bottom: 20, left: 20, zIndex: 2000, padding: 12, background: '#5856D6', color: 'white', border: 'none', borderRadius: 30 }}>📊 لوحة التحكم</button>
-        )}
+        <Onboarding isAdmin={isAdmin} onOpenAdmin={() => setShowAdmin(true)} />
         {showAdmin && <AdminDashboard onClose={() => setShowAdmin(false)} />}
       </>
     )

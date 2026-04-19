@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useAppStore } from '../../app/store'
 import { supabase } from '../../lib/supabase'
 
-export default function Onboarding() {
+export default function Onboarding({ isAdmin, onOpenAdmin }) {
   const [step, setStep] = useState(1)
   const [role, setRole] = useState('customer')
   const [phone, setPhone] = useState('')
@@ -83,6 +83,16 @@ export default function Onboarding() {
             <div className="role-selection">
               <button onClick={() => handleRoleSelect('customer')}>🛍️ أنا زبون</button>
               <button onClick={() => handleRoleSelect('driver')}>🚙 أنا سائق</button>
+              {isAdmin && (
+                <button 
+                  onClick={onOpenAdmin}
+                  style={{ background: '#5856D6', borderColor: '#5856D6', color: 'white' }}
+                  onMouseEnter={(e) => { e.currentTarget.style.background = '#4a48c0'; e.currentTarget.style.borderColor = '#4a48c0' }}
+                  onMouseLeave={(e) => { e.currentTarget.style.background = '#5856D6'; e.currentTarget.style.borderColor = '#5856D6' }}
+                >
+                  📊 لوحة التحكم
+                </button>
+              )}
             </div>
           </motion.div>
         )}
