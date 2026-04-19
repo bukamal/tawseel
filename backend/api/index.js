@@ -1,13 +1,9 @@
-import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { createClient } from '@supabase/supabase-js'
 
-// =====================================================
-// التهيئة والثوابت
-// =====================================================
-const supabaseUrl = process.env.SUPABASE_URL!
-const supabaseKey = process.env.SUPABASE_SERVICE_KEY!
-const botToken = process.env.BOT_TOKEN!
-const frontendUrl = process.env.FRONTEND_URL!
+const supabaseUrl = process.env.SUPABASE_URL
+const supabaseKey = process.env.SUPABASE_SERVICE_KEY
+const botToken = process.env.BOT_TOKEN
+const frontendUrl = process.env.FRONTEND_URL
 const adminIds = (process.env.ADMIN_TELEGRAM_IDS || '').split(',').map(id => id.trim())
 
 if (!supabaseUrl || !supabaseKey) throw new Error('Missing Supabase env')
@@ -17,10 +13,7 @@ const supabase = createClient(supabaseUrl, supabaseKey, {
   auth: { autoRefreshToken: false, persistSession: false }
 })
 
-// =====================================================
-// دوال مساعدة (Telegram, Geospatial)
-// =====================================================
-async function sendMessage(chatId: number, text: string, options?: any) {
+async function sendMessage(chatId, text, options = {}) {
   await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -28,7 +21,7 @@ async function sendMessage(chatId: number, text: string, options?: any) {
   })
 }
 
-function calculateDistance(lat1: number, lng1: number, lat2: number, lng2: number): number {
+function calculateDistance(lat1, lng1, lat2, lng2) {
   const R = 6371
   const dLat = (lat2 - lat1) * Math.PI / 180
   const dLng = (lng2 - lng1) * Math.PI / 180
@@ -36,41 +29,33 @@ function calculateDistance(lat1: number, lng1: number, lat2: number, lng2: numbe
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a))
 }
 
-function estimateFare(distanceKm: number, vehicleType: string = 'economy'): number {
-  const base: Record<string, number> = { economy:10, comfort:15, business:25, van:30, motorcycle:8 }
-  const rate: Record<string, number> = { economy:2, comfort:3, business:5, van:6, motorcycle:1.5 }
+function estimateFare(distanceKm, vehicleType = 'economy') {
+  const base = { economy:10, comfort:15, business:25, van:30, motorcycle:8 }
+  const rate = { economy:2, comfort:3, business:5, van:6, motorcycle:1.5 }
   return Math.round((base[vehicleType]||10) + distanceKm*(rate[vehicleType]||2))
 }
 
-function convertToStars(sar: number): number {
-  const usd = sar * 0.27
-  return Math.max(Math.ceil(usd * 77), 10)
+function convertToStars(sar) {
+  return Math.max(Math.ceil(sar * 0.27 * 77), 10)
 }
 
-async function authorizeAdmin(userId: string): Promise<boolean> {
+async function authorizeAdmin(userId) {
   if (!userId) return false
   const { data } = await supabase.from('users').select('telegram_id,role').eq('id', userId).single()
   return data?.role === 'admin' || adminIds.includes(String(data?.telegram_id))
 }
 
-// =====================================================
-// المعالج الرئيسي
-// =====================================================
-export default async function handler(req: VercelRequest, res: VercelResponse) {
+export default async function handler(req, res) {
   const { method, url, body, query } = req
-  const path = url!.split('?')[0]
+  const path = url.split('?')[0]
   const segments = path.split('/').filter(s => s)
 
-  // CORS preflight
-  if (method === 'OPTIONS') {
-    return res.status(200).end()
-  }
+  if (method === 'OPTIONS') return res.status(200).end()
 
   try {
-    // ========== WEBHOOK ==========
+    // Webhook
     if (segments[1] === 'webhook') {
       const payload = body
-
       if (payload.pre_checkout_query) {
         const q = payload.pre_checkout_query
         await fetch(`https://api.telegram.org/bot${botToken}/answerPreCheckoutQuery`, {
@@ -80,7 +65,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         })
         return res.status(200).json({ ok: true })
       }
-
       if (payload.message?.successful_payment) {
         const payment = payload.message.successful_payment
         const chatId = payload.message.chat.id
@@ -97,7 +81,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         }
         return res.status(200).json({ ok: true })
       }
-
       const { message, callback_query } = payload
       if (message?.text === '/start') {
         const chatId = message.chat.id
@@ -138,7 +121,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(200).json({ ok: true })
     }
 
-    // ========== USERS ==========
+    // Users
     if (segments[1] === 'users') {
       const telegramId = segments[2]
       if (method === 'GET' && telegramId) {
@@ -156,15 +139,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
     }
 
-    // ========== DRIVERS ==========
+    // Drivers
     if (segments[1] === 'drivers') {
       const action = segments[2]
       if (method === 'GET' && action === 'nearby') {
         const { lat, lng, radius = '5000' } = query
         const { data } = await supabase.rpc('nearby_drivers', {
-          lat: parseFloat(lat as string),
-          lng: parseFloat(lng as string),
-          radius_meters: parseInt(radius as string)
+          lat: parseFloat(lat),
+          lng: parseFloat(lng),
+          radius_meters: parseInt(radius)
         })
         return res.status(200).json({ drivers: data || [] })
       }
@@ -194,7 +177,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
     }
 
-    // ========== RIDES ==========
+    // Rides
     if (segments[1] === 'rides') {
       const action = segments[2]
       if (method === 'POST' && action === 'estimate_price') {
@@ -236,14 +219,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
     }
 
-    // ========== RATINGS ==========
+    // Ratings
     if (segments[1] === 'ratings' && segments[2] === 'create' && method === 'POST') {
       const { ride_id, from_user_id, to_user_id, rating, comment } = body
       const { data } = await supabase.from('ratings').insert({ ride_id, from_user_id, to_user_id, rating, comment }).select().single()
       return res.status(201).json({ rating: data })
     }
 
-    // ========== NOTIFICATIONS ==========
+    // Notifications
     if (segments[1] === 'notifications') {
       if (method === 'GET') {
         const { user_id } = query
@@ -261,9 +244,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
     }
 
-    // ========== ADMIN ==========
+    // Admin
     if (segments[1] === 'admin') {
-      const userId = req.headers['x-user-id'] as string
+      const userId = req.headers['x-user-id']
       if (!await authorizeAdmin(userId)) return res.status(403).json({ error: 'Forbidden' })
       const action = segments[2]
       if (method === 'GET' && action === 'drivers' && segments[3] === 'pending') {
@@ -282,7 +265,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     return res.status(404).json({ error: 'Not found' })
-  } catch (error: any) {
+  } catch (error) {
     console.error(error)
     return res.status(500).json({ error: error.message })
   }
