@@ -78,19 +78,18 @@ export default function Onboarding({ isAdmin, onOpenAdmin }) {
       <AnimatePresence mode="wait">
         {step === 1 && (
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="step">
-            <h1>🚗 مرحباً بك في Tawseel</h1>
-            <p>اختر كيف تريد استخدام التطبيق</p>
+            <h1>🚗 Tawseel</h1>
+            <p>اختر طريقة استخدامك للتطبيق</p>
             <div className="role-selection">
-              <button onClick={() => handleRoleSelect('customer')}>🛍️ أنا زبون</button>
-              <button onClick={() => handleRoleSelect('driver')}>🚙 أنا سائق</button>
+              <button onClick={() => handleRoleSelect('customer')}>
+                <span>🛍️</span> أنا زبون
+              </button>
+              <button onClick={() => handleRoleSelect('driver')}>
+                <span>🚙</span> أنا سائق
+              </button>
               {isAdmin && (
-                <button 
-                  onClick={onOpenAdmin}
-                  style={{ background: '#5856D6', borderColor: '#5856D6', color: 'white' }}
-                  onMouseEnter={(e) => { e.currentTarget.style.background = '#4a48c0'; e.currentTarget.style.borderColor = '#4a48c0' }}
-                  onMouseLeave={(e) => { e.currentTarget.style.background = '#5856D6'; e.currentTarget.style.borderColor = '#5856D6' }}
-                >
-                  📊 لوحة التحكم
+                <button onClick={onOpenAdmin} style={{ background: 'var(--secondary)', borderColor: 'var(--secondary)', color: 'white' }}>
+                  <span>📊</span> لوحة التحكم
                 </button>
               )}
             </div>
@@ -102,7 +101,7 @@ export default function Onboarding({ isAdmin, onOpenAdmin }) {
             <p>أدخل رقم جوالك للتواصل</p>
             <input type="tel" value={phone} onChange={e => setPhone(e.target.value)} placeholder="09xxxxxxxx" />
             {error && <p className="error">{error}</p>}
-            <div style={{ display: 'flex', gap: 10 }}>
+            <div style={{ display: 'flex', gap: 12 }}>
               <button onClick={() => setStep(1)} className="btn-secondary" style={{ flex: 1 }}>رجوع</button>
               <button onClick={handlePhoneSubmit} disabled={isSubmitting} style={{ flex: 1 }}>{isSubmitting ? 'جاري...' : 'متابعة'}</button>
             </div>
