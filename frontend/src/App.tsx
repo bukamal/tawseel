@@ -9,17 +9,17 @@ import DriverMode from '@/features/driver-mode/DriverMode'
 import ActiveRide from '@/features/ride-request/ActiveRide'
 import NotificationsBell from '@/components/common/NotificationsBell'
 import AdminDashboard from '@/features/admin/AdminDashboard'
-import type { User } from '@/types'
 
 function App() {
   const { user, setUser, setLocation, isOnboarding, activeRide } = useAppStore()
   const [isAdmin, setIsAdmin] = useState(false)
   const [showAdmin, setShowAdmin] = useState(false)
+  const [appError, setAppError] = useState<string | null>(null)
 
   useEffect(() => {
     const tgData = initTelegram()
     if (tgData?.telegramId) {
-      fetchUser(tgData.telegramId)
+      fetchUser(tgData.telegramId).catch(err => setAppError('فشل تحميل بيانات المستخدم'))
     }
 
     if (navigator.geolocation) {
@@ -36,16 +36,13 @@ function App() {
   }, [])
 
   const fetchUser = async (telegramId: string) => {
-    try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/users/${telegramId}`)
-      const data = await res.json()
-      if (data.user) {
-        setUser(data.user)
-        const adminIds = (import.meta.env.VITE_ADMIN_TELEGRAM_IDS || '').split(',')
-        setIsAdmin(data.user.role === 'admin' || adminIds.includes(String(telegramId)))
-      }
-    } catch (error) {
-      console.error('Failed to fetch user:', error)
+    const res = await fetch(`${import.meta.env.VITE_API_URL}/api/users/${telegramId}`)
+    if (!res.ok) throw new Error('User not found')
+    const data = await res.json()
+    if (data.user) {
+      setUser(data.user)
+      const adminIds = (import.meta.env.VITE_ADMIN_TELEGRAM_IDS || '').split(',')
+      setIsAdmin(data.user.role === 'admin' || adminIds.includes(String(telegramId)))
     }
   }
 
@@ -55,15 +52,13 @@ function App() {
       await fetch(`${import.meta.env.VITE_API_URL}/api/drivers/location`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          driver_id: user.driver_id,
-          lat: coords.latitude,
-          lng: coords.longitude,
-          heading: coords.heading,
-          speed: coords.speed
-        })
+        body: JSON.stringify({ driver_id: user.driver_id, lat: coords.latitude, lng: coords.longitude, heading: coords.heading, speed: coords.speed })
       })
     }
+  }
+
+  if (appError) {
+    return <div style={{ color: 'white', padding: 20 }}>خطأ: {appError}</div>
   }
 
   if (isOnboarding) return <Onboarding />
@@ -76,14 +71,8 @@ function App() {
     <div className="app">
       <div className="top-bar">
         <NotificationsBell />
-        {isAdmin && (
-          <button className="icon-btn" onClick={() => setShowAdmin(true)} title="لوحة التحكم">
-            📊
-          </button>
-        )}
-        <button className="icon-btn" onClick={() => useAppStore.getState().logout()} title="تسجيل الخروج">
-          🚪
-        </button>
+        {isAdmin && <button className="icon-btn" onClick={() => setShowAdmin(true)}>📊</button>}
+        <button className="icon-btn" onClick={() => useAppStore.getState().logout()}>🚪</button>
       </div>
 
       <div className="map-container">
