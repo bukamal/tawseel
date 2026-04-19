@@ -129,10 +129,11 @@ export default async function handler(req, res) {
         return res.status(200).json({ user: { ...user, driver_id: user?.drivers?.[0]?.id } })
       }
       if (method === 'POST' && segments[2] === 'update') {
-        const { telegram_id, chat_id, full_name, username, phone, role } = body
+        let { telegram_id, chat_id, full_name, username, phone, role } = body
+        const finalFullName = full_name || 'مستخدم'
         const { data: user, error } = await supabase
           .from('users')
-          .upsert({ telegram_id, chat_id, full_name, username, phone, role, updated_at: new Date().toISOString() }, { onConflict: 'telegram_id' })
+          .upsert({ telegram_id, chat_id, full_name: finalFullName, username, phone, role, updated_at: new Date().toISOString() }, { onConflict: 'telegram_id' })
           .select().single()
         if (error) return res.status(500).json({ error: error.message })
         return res.status(200).json({ user })

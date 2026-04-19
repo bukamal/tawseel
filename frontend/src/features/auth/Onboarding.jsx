@@ -14,7 +14,10 @@ export default function Onboarding() {
 
   const handlePhoneSubmit = async () => {
     const cleanPhone = phone.replace(/\D/g, '')
-    if (cleanPhone.length < 9) return setError('رقم هاتف غير صالح')
+    if (cleanPhone.length < 9) {
+      setError('رقم هاتف غير صالح')
+      return
+    }
     setIsSubmitting(true)
     setError('')
 
@@ -22,6 +25,9 @@ export default function Onboarding() {
     const params = new URLSearchParams(window.location.search)
     const telegramId = tg?.initDataUnsafe?.user?.id ?? params.get('tg_id')
     const chatId = params.get('chat_id')
+    const firstName = tg?.initDataUnsafe?.user?.first_name || ''
+    const lastName = tg?.initDataUnsafe?.user?.last_name || ''
+    const fullName = (firstName + ' ' + lastName).trim() || 'مستخدم'
 
     if (!telegramId) {
       setError('تعذر الحصول على معرف تيليجرام')
@@ -36,7 +42,7 @@ export default function Onboarding() {
         body: JSON.stringify({
           telegram_id: telegramId,
           chat_id: chatId,
-          full_name: tg?.initDataUnsafe?.user?.first_name + ' ' + (tg?.initDataUnsafe?.user?.last_name || ''),
+          full_name: fullName,
           phone: cleanPhone,
           role
         })
@@ -44,16 +50,15 @@ export default function Onboarding() {
 
       if (!res.ok) {
         const errText = await res.text()
-        throw new Error(errText)
+        throw new Error(`HTTP ${res.status}: ${errText}`)
       }
 
       const data = await res.json()
       setUser(data.user)
-      // إذا كان سائقاً ننتقل للخطوة 3 (سيتم إضافتها لاحقاً)
       if (role === 'driver') setStep(3)
     } catch (err) {
       console.error(err)
-      setError('فشل الاتصال بالخادم: ' + err.message)
+      setError(`فشل الاتصال: ${err.message}`)
     } finally {
       setIsSubmitting(false)
     }
@@ -76,7 +81,7 @@ export default function Onboarding() {
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="step">
             <h2>📱 رقم الهاتف</h2>
             <input type="tel" value={phone} onChange={e => setPhone(e.target.value)} placeholder="09xxxxxxxx" />
-            {error && <p className="error">{error}</p>}
+            {error && <p style={{ color: 'red' }}>{error}</p>}
             <div style={{ display: 'flex', gap: 10 }}>
               <button onClick={() => setStep(1)}>رجوع</button>
               <button onClick={handlePhoneSubmit} disabled={isSubmitting}>{isSubmitting ? 'جاري...' : 'متابعة'}</button>
