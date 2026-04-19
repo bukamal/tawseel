@@ -38,17 +38,17 @@ function App() {
     } catch (error) { console.error(error) }
   }
 
-  if (isOnboarding) {
-    return (
-      <>
-        <Onboarding isAdmin={isAdmin} onOpenAdmin={() => setShowAdmin(true)} />
-        {showAdmin && <AdminDashboard onClose={() => setShowAdmin(false)} />}
-      </>
-    )
+  // عرض لوحة التحكم كشاشة مستقلة
+  if (showAdmin && isAdmin) {
+    return <AdminDashboard onClose={() => setShowAdmin(false)} />
   }
 
-  if (showAdmin && isAdmin) return <AdminDashboard onClose={() => setShowAdmin(false)} />
+  // شاشة Onboarding
+  if (isOnboarding) {
+    return <Onboarding isAdmin={isAdmin} onOpenAdmin={() => setShowAdmin(true)} />
+  }
 
+  // التطبيق الرئيسي
   return (
     <div className="app">
       <div className="top-bar">
