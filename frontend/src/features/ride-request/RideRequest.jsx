@@ -16,6 +16,9 @@ export default function RideRequest() {
   const [distance, setDistance] = useState(null)
   const [isSearching, setIsSearching] = useState(false)
   const [surge, setSurge] = useState(1)
+  const [isScheduled, setIsScheduled] = useState(false)
+  const [scheduledDate, setScheduledDate] = useState('')
+  const [scheduledTime, setScheduledTime] = useState('')
 
   useEffect(() => {
     if (currentLocation && !pickupLocation) {
@@ -65,27 +68,34 @@ export default function RideRequest() {
 
   const handleRequest = async () => {
     if (!pickupLocation || !dropoffLocation) return
+    if (isScheduled && (!scheduledDate || !scheduledTime)) return alert('الرجاء تحديد وقت الجدولة')
     hapticFeedback('medium')
     setIsSearching(true)
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/rides/request`, {
+      const endpoint = isScheduled ? '/api/rides/schedule' : '/api/rides/request'
+      const body = {
+        customer_id: useAppStore.getState().user?.id,
+        pickup_location: pickupLocation,
+        dropoff_location: dropoffLocation,
+        pickup_address: pickupAddress,
+        dropoff_address: dropoffAddress,
+        vehicle_type: selectedVehicle,
+        estimated_price: estimatedPrice,
+        payment_method: paymentMethod
+      }
+      if (isScheduled) body.scheduled_for = `${scheduledDate}T${scheduledTime}:00`
+      const res = await fetch(`${import.meta.env.VITE_API_URL}${endpoint}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          customer_id: useAppStore.getState().user?.id,
-          pickup_location: pickupLocation,
-          dropoff_location: dropoffLocation,
-          pickup_address: pickupAddress,
-          dropoff_address: dropoffAddress,
-          vehicle_type: selectedVehicle,
-          estimated_price: estimatedPrice,
-          payment_method: paymentMethod
-        })
+        body: JSON.stringify(body)
       })
       const data = await res.json()
-      if (paymentMethod === 'stars' && data.payment_required) {
+      if (isScheduled) {
+        hapticFeedback('success')
+        alert(`✅ تم جدولة الرحلة بنجاح!\nالتاريخ: ${scheduledDate}\nالوقت: ${scheduledTime}`)
         setIsSearching(false)
-        // سيتم فتح نافذة الدفع تلقائياً من تيليجرام
+      } else if (paymentMethod === 'stars' && data.payment_required) {
+        setIsSearching(false)
       } else {
         setActiveRide(data.ride)
       }
@@ -113,6 +123,18 @@ export default function RideRequest() {
         </div>
       </div>
 
+      <div style={{ marginBottom: 15 }}>
+        <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <input type="checkbox" checked={isScheduled} onChange={e => setIsScheduled(e.target.checked)} /> 📅 جدولة الرحلة لوقت لاحق
+        </label>
+        {isScheduled && (
+          <div style={{ display: 'flex', gap: 10, marginTop: 10 }}>
+            <input type="date" value={scheduledDate} onChange={e => setScheduledDate(e.target.value)} min={new Date().toISOString().split('T')[0]} style={{ flex: 1, padding: 10, border: '1px solid #ddd', borderRadius: 8 }} />
+            <input type="time" value={scheduledTime} onChange={e => setScheduledTime(e.target.value)} style={{ flex: 1, padding: 10, border: '1px solid #ddd', borderRadius: 8 }} />
+          </div>
+        )}
+      </div>
+
       {estimatedPrice && distance && (
         <div style={{ padding: 15, background: '#F8F9FA', borderRadius: 12, marginBottom: 15 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>المسافة:</span><span>{distance.toFixed(1)} كم</span></div>
@@ -122,7 +144,7 @@ export default function RideRequest() {
       )}
 
       <button onClick={handleRequest} disabled={!pickupLocation || !dropoffLocation} style={{ width: '100%', padding: 15, background: '#007AFF', color: 'white', border: 'none', borderRadius: 12 }}>
-        {paymentMethod === 'stars' ? `⭐ ادفع ${estimatedStars} نجمة` : '🔍 ابحث عن سائق'}
+        {isScheduled ? '📅 جدولة الرحلة' : paymentMethod === 'stars' ? `⭐ ادفع ${estimatedStars} نجمة` : '🔍 ابحث عن سائق'}
       </button>
 
       {showPicker && (
