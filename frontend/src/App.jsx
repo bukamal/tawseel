@@ -7,14 +7,12 @@ import RideRequest from './features/ride-request/RideRequest'
 import DriverMode from './features/driver-mode/DriverMode'
 import ActiveRide from './features/ride-request/ActiveRide'
 import AdminDashboard from './features/admin/AdminDashboard'
-import Button from './components/atoms/Button'
 
 function App() {
-  const { user, setUser, setLocation, isOnboarding, activeRide } = useAppStore()
+  const { user, setUser, setLocation, isOnboarding, activeRide, resetRide } = useAppStore()
   const [isAdmin, setIsAdmin] = useState(false)
   const [showAdmin, setShowAdmin] = useState(false)
 
-  // 🐉 تنشيط سمة تيليجرام الحية (الزئير الأول)
   useTelegramTheme()
 
   useEffect(() => {
@@ -46,13 +44,21 @@ function App() {
     }
   }
 
+  const handleBack = () => {
+    resetRide()
+    useAppStore.getState().logout()
+  }
+
   if (showAdmin && isAdmin) return <AdminDashboard onClose={() => setShowAdmin(false)} />
   if (isOnboarding) return <Onboarding isAdmin={isAdmin} onOpenAdmin={() => setShowAdmin(true)} />
 
   return (
     <div className="app">
-      <div className="top-bar">
-      </div>
+      {!isOnboarding && (
+        <button className="back-button" onClick={handleBack} title="الرجوع إلى القائمة الرئيسية">
+          ←
+        </button>
+      )}
       <div className="map-container">
         <Map />
       </div>
