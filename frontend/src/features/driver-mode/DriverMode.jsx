@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react'
 import { useAppStore } from '@/app/store'
 import { supabase } from '@/lib/supabase'
-import { formatPrice } from '@/utils/formatters'
+import { formatPrice, formatStarsPrice } from '@/utils/formatters'
 import { calculateDistance } from '@/utils/geolocation'
 
 export default function DriverMode({ isAdmin, onOpenAdmin }) {
-  const { user, setActiveRide, currentLocation } = useAppStore()
+  const { user, activeRide, setActiveRide, currentLocation } = useAppStore()
   const [isOnline, setIsOnline] = useState(false)
   const [pendingRides, setPendingRides] = useState([])
   const [driverData, setDriverData] = useState(null)
@@ -53,12 +53,43 @@ export default function DriverMode({ isAdmin, onOpenAdmin }) {
     setPendingRides([])
   }
 
+  const updateRideStatus = async (status) => {
+    await fetch(`${import.meta.env.VITE_API_URL}/api/rides/${activeRide.id}/status`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status })
+    })
+    if (status === 'completed') {
+      setActiveRide(null)
+      fetchDriverData()
+    } else {
+      setActiveRide({ ...activeRide, status })
+    }
+  }
+
   if (!driverData?.is_verified) {
     return (
       <div className="driver-verification">
         <h3>⏳ حسابك قيد المراجعة</h3>
         <p>سنقوم بتفعيل حسابك خلال 24 ساعة</p>
         {isAdmin && <button onClick={onOpenAdmin}>👑 توثيق من لوحة التحكم</button>}
+      </div>
+    )
+  }
+
+  if (activeRide) {
+    return (
+      <div style={{ padding: 20 }}>
+        <h3>🚗 رحلة نشطة</h3>
+        <p><strong>الزبون:</strong> {activeRide.customer?.full_name} | <a href={`tel:${activeRide.customer?.phone}`}>📞</a></p>
+        <p><strong>من:</strong> {activeRide.pickup_address}</p>
+        <p><strong>إلى:</strong> {activeRide.dropoff_address}</p>
+        <p><strong>السعر:</strong> {activeRide.payment_method === 'stars' ? formatStarsPrice(activeRide.stars_price) : formatPrice(activeRide.price)}</p>
+        <div style={{ display: 'flex', gap: 10, marginTop: 15 }}>
+          {activeRide.status === 'accepted' && <button onClick={() => updateRideStatus('arrived')} style={{ flex: 1, padding: 12, background: '#FFA500', color: 'white', border: 'none', borderRadius: 8 }}>✅ وصلت للموقع</button>}
+          {activeRide.status === 'arrived' && <button onClick={() => updateRideStatus('picked_up')} style={{ flex: 1, padding: 12, background: '#007AFF', color: 'white', border: 'none', borderRadius: 8 }}>🚗 بدأت الرحلة</button>}
+          {activeRide.status === 'picked_up' && <button onClick={() => updateRideStatus('completed')} style={{ flex: 1, padding: 12, background: '#34C759', color: 'white', border: 'none', borderRadius: 8 }}>✅ اكتملت الرحلة</button>}
+        </div>
       </div>
     )
   }
@@ -76,8 +107,8 @@ export default function DriverMode({ isAdmin, onOpenAdmin }) {
           <h4>طلبات جديدة ({pendingRides.length})</h4>
           {pendingRides.map(ride => (
             <div key={ride.id} style={{ background: '#f0f0f0', padding: 15, borderRadius: 12, marginBottom: 10 }}>
-              <p>💰 {formatPrice(ride.price)}</p>
-              <p>📍 {ride.pickup_address}</p>
+              <p>💰 {formatPrice(ride.price)} | 📍 {ride.distance_km} كم</p>
+              <p>{ride.pickup_address}</p>
               <button onClick={() => acceptRide(ride.id)} style={{ background: '#007AFF', color: 'white', border: 'none', padding: 10, borderRadius: 8, width: '100%' }}>قبول</button>
             </div>
           ))}

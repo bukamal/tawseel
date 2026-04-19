@@ -15,25 +15,13 @@ function App() {
 
   useEffect(() => {
     const tg = window.Telegram?.WebApp
-    if (tg) {
-      tg.ready()
-      tg.expand()
-    }
+    if (tg) { tg.ready(); tg.expand() }
     const params = new URLSearchParams(window.location.search)
     const telegramId = tg?.initDataUnsafe?.user?.id ?? params.get('tg_id')
-    if (telegramId) {
-      fetchUser(telegramId)
-    }
+    if (telegramId) fetchUser(telegramId)
 
     if (navigator.geolocation) {
-      navigator.geolocation.watchPosition(
-        (pos) => {
-          const loc = [pos.coords.latitude, pos.coords.longitude]
-          setLocation(loc)
-        },
-        (err) => console.error(err),
-        { enableHighAccuracy: true }
-      )
+      navigator.geolocation.watchPosition(pos => setLocation([pos.coords.latitude, pos.coords.longitude]), err => console.error(err), { enableHighAccuracy: true })
     }
   }, [])
 
@@ -46,16 +34,22 @@ function App() {
         const adminIds = (import.meta.env.VITE_ADMIN_TELEGRAM_IDS || '').split(',')
         setIsAdmin(data.user.role === 'admin' || adminIds.includes(String(telegramId)))
       }
-    } catch (error) {
-      console.error('Failed to fetch user:', error)
-    }
+    } catch (error) { console.error(error) }
   }
 
-  if (isOnboarding) return <Onboarding />
-
-  if (showAdmin && isAdmin) {
-    return <AdminDashboard onClose={() => setShowAdmin(false)} />
+  if (isOnboarding) {
+    return (
+      <>
+        <Onboarding />
+        {isAdmin && (
+          <button onClick={() => setShowAdmin(true)} style={{ position: 'fixed', bottom: 20, left: 20, zIndex: 2000, padding: 12, background: '#5856D6', color: 'white', border: 'none', borderRadius: 30 }}>📊 لوحة التحكم</button>
+        )}
+        {showAdmin && <AdminDashboard onClose={() => setShowAdmin(false)} />}
+      </>
+    )
   }
+
+  if (showAdmin && isAdmin) return <AdminDashboard onClose={() => setShowAdmin(false)} />
 
   return (
     <div className="app">
@@ -64,19 +58,9 @@ function App() {
         {isAdmin && <button className="icon-btn" onClick={() => setShowAdmin(true)}>📊</button>}
         <button className="icon-btn" onClick={() => useAppStore.getState().logout()}>🚪</button>
       </div>
-
-      <div className="map-container">
-        <Map />
-      </div>
-
+      <div className="map-container"><Map /></div>
       <div className="bottom-sheet">
-        {user?.role === 'driver' ? (
-          <DriverMode isAdmin={isAdmin} onOpenAdmin={() => setShowAdmin(true)} />
-        ) : activeRide ? (
-          <ActiveRide />
-        ) : (
-          <RideRequest />
-        )}
+        {user?.role === 'driver' ? <DriverMode isAdmin={isAdmin} onOpenAdmin={() => setShowAdmin(true)} /> : activeRide ? <ActiveRide /> : <RideRequest />}
       </div>
     </div>
   )
