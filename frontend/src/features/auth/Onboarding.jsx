@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAppStore } from '../../app/store'
 import { supabase } from '../../lib/supabase'
+import Button from '../../components/atoms/Button'
 
 export default function Onboarding({ isAdmin, onOpenAdmin }) {
   const [step, setStep] = useState(1)
@@ -14,7 +15,10 @@ export default function Onboarding({ isAdmin, onOpenAdmin }) {
   const [error, setError] = useState('')
   const { setUser, user } = useAppStore()
 
-  const handleRoleSelect = (selected) => { setRole(selected); setStep(2) }
+  const handleRoleSelect = (selected) => {
+    setRole(selected)
+    setStep(2)
+  }
 
   const handlePhoneSubmit = async () => {
     const cleanPhone = phone.replace(/\D/g, '')
@@ -25,11 +29,8 @@ export default function Onboarding({ isAdmin, onOpenAdmin }) {
     const params = new URLSearchParams(window.location.search)
     const telegramId = tg?.initDataUnsafe?.user?.id ?? params.get('tg_id')
     const chatId = params.get('chat_id')
-    const firstName = tg?.initDataUnsafe?.user?.first_name || ''
-    const lastName = tg?.initDataUnsafe?.user?.last_name || ''
-    const fullName = (firstName + ' ' + lastName).trim() || 'مستخدم'
+    const fullName = (tg?.initDataUnsafe?.user?.first_name + ' ' + (tg?.initDataUnsafe?.user?.last_name || '')).trim() || 'مستخدم'
     if (!telegramId) return setError('تعذر الحصول على معرف تيليجرام')
-
     try {
       const res = await fetch(`${import.meta.env.VITE_API_URL}/api/users/update`, {
         method: 'POST',
@@ -40,8 +41,11 @@ export default function Onboarding({ isAdmin, onOpenAdmin }) {
       const data = await res.json()
       setUser(data.user)
       if (role === 'driver') setStep(3)
-    } catch (err) { setError(err.message) }
-    finally { setIsSubmitting(false) }
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   const uploadPhoto = async (file, bucket, path) => {
@@ -69,49 +73,67 @@ export default function Onboarding({ isAdmin, onOpenAdmin }) {
       if (!res.ok) throw new Error(await res.text())
       const data = await res.json()
       setUser({ ...user, driver_id: data.driver.id, role: 'driver' })
-    } catch (err) { setError(err.message) }
-    finally { setIsSubmitting(false) }
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (
     <div className="onboarding-container">
       <AnimatePresence mode="wait">
         {step === 1 && (
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="step">
+          <motion.div
+            key="step1"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="step"
+          >
             <h1>🚗 Tawseel</h1>
             <p>اختر طريقة استخدامك للتطبيق</p>
             <div className="role-selection">
-              <button onClick={() => handleRoleSelect('customer')}>
-                <span>🛍️</span> أنا زبون
-              </button>
-              <button onClick={() => handleRoleSelect('driver')}>
-                <span>🚙</span> أنا سائق
-              </button>
-              {isAdmin && (
-                <button onClick={onOpenAdmin} style={{ background: 'var(--secondary)', borderColor: 'var(--secondary)', color: 'white' }}>
-                  <span>📊</span> لوحة التحكم
-                </button>
-              )}
+              <Button variant="outline" onClick={() => handleRoleSelect('customer')}><span>🛍️</span> أنا زبون</Button>
+              <Button variant="outline" onClick={() => handleRoleSelect('driver')}><span>🚙</span> أنا سائق</Button>
+              {isAdmin && <Button variant="secondary" onClick={onOpenAdmin}><span>📊</span> لوحة التحكم</Button>}
             </div>
           </motion.div>
         )}
+
         {step === 2 && (
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="step">
+          <motion.div
+            key="step2"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="step"
+          >
             <h2>📱 رقم الهاتف</h2>
             <p>أدخل رقم جوالك للتواصل</p>
             <input type="tel" value={phone} onChange={e => setPhone(e.target.value)} placeholder="09xxxxxxxx" />
             {error && <p className="error">{error}</p>}
             <div style={{ display: 'flex', gap: 12 }}>
-              <button onClick={() => setStep(1)} className="btn-secondary" style={{ flex: 1 }}>رجوع</button>
-              <button onClick={handlePhoneSubmit} disabled={isSubmitting} style={{ flex: 1 }}>{isSubmitting ? 'جاري...' : 'متابعة'}</button>
+              <Button variant="secondary" onClick={() => setStep(1)} style={{ flex: 1 }}>رجوع</Button>
+              <Button variant="primary" onClick={handlePhoneSubmit} loading={isSubmitting} style={{ flex: 1 }}>متابعة</Button>
             </div>
           </motion.div>
         )}
+
         {step === 3 && role === 'driver' && (
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="step">
+          <motion.div
+            key="step3"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="step"
+          >
             <h2>🚙 معلومات المركبة</h2>
             <select value={vehicleInfo.type} onChange={e => setVehicleInfo({ ...vehicleInfo, type: e.target.value })}>
-              <option value="economy">اقتصادي</option><option value="comfort">مريح</option><option value="business">أعمال</option><option value="van">فان</option>
+              <option value="economy">اقتصادي</option>
+              <option value="comfort">مريح</option>
+              <option value="business">أعمال</option>
+              <option value="van">فان</option>
             </select>
             <input placeholder="موديل السيارة" value={vehicleInfo.model} onChange={e => setVehicleInfo({ ...vehicleInfo, model: e.target.value })} />
             <input placeholder="اللون" value={vehicleInfo.color} onChange={e => setVehicleInfo({ ...vehicleInfo, color: e.target.value })} />
@@ -122,7 +144,7 @@ export default function Onboarding({ isAdmin, onOpenAdmin }) {
             <label>صورة المركبة</label>
             <input type="file" accept="image/*" onChange={e => setVehiclePhoto(e.target.files?.[0] || null)} />
             {error && <p className="error">{error}</p>}
-            <button onClick={handleDriverRegistration} disabled={isSubmitting}>{isSubmitting ? 'جاري التسجيل...' : 'إكمال التسجيل'}</button>
+            <Button variant="primary" onClick={handleDriverRegistration} loading={isSubmitting}>إكمال التسجيل</Button>
           </motion.div>
         )}
       </AnimatePresence>

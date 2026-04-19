@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
+import Button from '@/components/atoms/Button'
 import { hapticFeedback } from '@/lib/telegram'
 
 const pickupIcon = new L.Icon({ iconUrl: '/assets/pickup-marker.svg', iconSize: [35, 45], iconAnchor: [17, 45] })
@@ -55,7 +56,10 @@ const AddressSearch = ({ onSelect, placeholder }) => {
   )
 }
 
-const MapController = ({ onSelect }) => { useMapEvents({ click(e) { onSelect({ lat: e.latlng.lat, lng: e.latlng.lng, address: `${e.latlng.lat},${e.latlng.lng}` }) } }); return null }
+const MapController = ({ onSelect }) => {
+  useMapEvents({ click(e) { onSelect({ lat: e.latlng.lat, lng: e.latlng.lng, address: `${e.latlng.lat},${e.latlng.lng}` }) } })
+  return null
+}
 
 export default function LocationPicker({ type, initialLocation, onSelect, onClose, currentLocation }) {
   const [temp, setTemp] = useState(initialLocation)
@@ -71,7 +75,7 @@ export default function LocationPicker({ type, initialLocation, onSelect, onClos
         style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'white', zIndex: 2000, display: 'flex', flexDirection: 'column' }}
       >
         <motion.div initial={{ y: -50 }} animate={{ y: 0 }} style={{ padding: 16, borderBottom: '1px solid #eee', display: 'flex', alignItems: 'center', gap: 12 }}>
-          <button onClick={onClose}>←</button>
+          <Button variant="outline" size="sm" onClick={onClose} style={{ width: 'auto' }}>←</Button>
           <h3>{type === 'pickup' ? 'حدد نقطة الانطلاق' : 'حدد الوجهة'}</h3>
         </motion.div>
         <div style={{ padding: 16 }}>
@@ -106,12 +110,16 @@ export default function LocationPicker({ type, initialLocation, onSelect, onClos
               style={{ padding: 16, background: '#F8F9FA', borderTop: '1px solid #eee' }}
             >
               <p>{temp.address}</p>
-              <button
-                onClick={() => { hapticFeedback('medium'); onSelect({ coordinates: [temp.lat, temp.lng], address: temp.address }); onClose() }}
-                style={{ width: '100%', padding: 16, background: '#007AFF', color: 'white', border: 'none', borderRadius: 12 }}
+              <Button
+                variant="primary"
+                onClick={() => {
+                  hapticFeedback('medium')
+                  onSelect({ coordinates: [temp.lat, temp.lng], address: temp.address })
+                  onClose()
+                }}
               >
                 ✅ تأكيد الموقع
-              </button>
+              </Button>
             </motion.div>
           )}
         </AnimatePresence>

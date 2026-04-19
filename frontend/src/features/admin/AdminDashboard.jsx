@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { supabase } from '@/lib/supabase'
 import { useAppStore } from '@/app/store'
+import Button from '@/components/atoms/Button'
 import { formatPrice, formatStarsPrice, formatShortDate } from '@/utils/formatters'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 
@@ -52,7 +53,6 @@ export default function AdminDashboard({ onClose }) {
     fetchPending()
   }
 
-  // حركات البطاقات
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: { opacity: 1, transition: { staggerChildren: 0.05 } }
@@ -70,14 +70,9 @@ export default function AdminDashboard({ onClose }) {
       exit={{ opacity: 0 }}
       className="admin-dashboard"
     >
-      <motion.button
-        whileHover={{ scale: 1.02 }}
-        whileTap={{ scale: 0.98 }}
-        onClick={onClose}
-        className="admin-back-btn"
-      >
+      <Button variant="primary" size="sm" onClick={onClose} style={{ width: 'auto', marginBottom: 20 }}>
         ← العودة للتطبيق
-      </motion.button>
+      </Button>
 
       <motion.h1
         initial={{ x: -20, opacity: 0 }}
@@ -95,7 +90,7 @@ export default function AdminDashboard({ onClose }) {
       >
         <div><label>من</label><input type="date" value={dateRange.from} onChange={e => setDateRange({ ...dateRange, from: e.target.value })} /></div>
         <div><label>إلى</label><input type="date" value={dateRange.to} onChange={e => setDateRange({ ...dateRange, to: e.target.value })} /></div>
-        <motion.button whileTap={{ scale: 0.95 }} onClick={fetchStats} className="admin-refresh-btn">تحديث</motion.button>
+        <Button variant="primary" size="sm" onClick={fetchStats}>تحديث</Button>
       </motion.div>
 
       <motion.div
@@ -194,8 +189,8 @@ export default function AdminDashboard({ onClose }) {
                         {d.vehicle_photo_url && <a href={d.vehicle_photo_url} target="_blank" rel="noreferrer">مركبة</a>}
                       </td>
                       <td>
-                        <button onClick={() => handleVerify(d.id, true)} className="admin-btn-accept">✅ قبول</button>
-                        <button onClick={() => handleVerify(d.id, false)} className="admin-btn-reject">❌ رفض</button>
+                        <Button variant="success" size="sm" onClick={() => handleVerify(d.id, true)} style={{ marginRight: 8 }}>✅ قبول</Button>
+                        <Button variant="danger" size="sm" onClick={() => handleVerify(d.id, false)}>❌ رفض</Button>
                       </td>
                     </motion.tr>
                   ))}

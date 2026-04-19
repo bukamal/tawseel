@@ -3,6 +3,7 @@ import { motion } from 'framer-motion'
 import { useAppStore } from '@/app/store'
 import { supabase } from '@/lib/supabase'
 import RatingModal from '@/components/common/RatingModal'
+import Button from '@/components/atoms/Button'
 import { formatPrice, formatStarsPrice, getStatusText } from '@/utils/formatters'
 import { hapticFeedback, showConfirm } from '@/lib/telegram'
 
@@ -77,7 +78,7 @@ export default function ActiveRide() {
           <div className="price-total">{activeRide.payment_method === 'stars' ? formatStarsPrice(activeRide.stars_price) : formatPrice(activeRide.price)}</div>
         </div>
         {['pending', 'searching', 'accepted'].includes(activeRide.status) && (
-          <motion.button whileTap={{ scale: 0.97 }} className="btn-danger" onClick={handleCancel}>إلغاء الرحلة</motion.button>
+          <Button variant="danger" onClick={handleCancel}>إلغاء الرحلة</Button>
         )}
       </motion.div>
       {showRating && targetUserId && (

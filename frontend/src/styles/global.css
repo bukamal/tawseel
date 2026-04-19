@@ -734,3 +734,12 @@ button:disabled {
   border: 2px solid rgba(0, 0, 0, 0.1);
   border-top-color: var(--color-gray-dark);
 }
+
+/* إضافة متغير التحذير (warning) */
+.btn-warning {
+  background: var(--color-warning);
+  color: white;
+}
+.btn-warning:hover:not(:disabled) {
+  background: #e68600;
+}

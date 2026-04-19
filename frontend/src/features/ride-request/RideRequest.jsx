@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAppStore } from '@/app/store'
 import LocationPicker from '@/components/common/LocationPicker'
+import Button from '@/components/atoms/Button'
 import { calculateDistance, convertToStars } from '@/utils/geolocation'
 import { formatPrice, formatStarsPrice } from '@/utils/formatters'
 import { hapticFeedback } from '@/lib/telegram'
@@ -201,13 +202,13 @@ export default function RideRequest() {
         )}
       </AnimatePresence>
 
-      <motion.button
-        whileTap={{ scale: 0.97 }}
+      <Button
+        variant="primary"
         onClick={handleRequest}
         disabled={!pickupLocation || !dropoffLocation}
       >
         {isScheduled ? '📅 جدولة الرحلة' : paymentMethod === 'stars' ? `⭐ ادفع ${estimatedStars} نجمة` : '🔍 ابحث عن سائق'}
-      </motion.button>
+      </Button>
 
       {showPicker && (
         <LocationPicker

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAppStore } from '@/app/store'
 import { supabase } from '@/lib/supabase'
+import Button from '@/components/atoms/Button'
 import { formatPrice, formatStarsPrice } from '@/utils/formatters'
 import { calculateDistance } from '@/utils/geolocation'
 
@@ -74,7 +75,7 @@ export default function DriverMode({ isAdmin, onOpenAdmin }) {
         <div style={{ fontSize: 56, marginBottom: 20 }}>⏳</div>
         <h3 style={{ marginBottom: 12 }}>حسابك قيد المراجعة</h3>
         <p style={{ color: 'var(--color-gray)', marginBottom: 20 }}>سنقوم بتفعيل حسابك خلال 24 ساعة</p>
-        {isAdmin && <button onClick={onOpenAdmin} style={{ background: 'var(--color-secondary)' }}>👑 توثيق من لوحة التحكم</button>}
+        {isAdmin && <Button variant="secondary" onClick={onOpenAdmin}>👑 توثيق من لوحة التحكم</Button>}
       </motion.div>
     )
   }
@@ -95,9 +96,9 @@ export default function DriverMode({ isAdmin, onOpenAdmin }) {
           </p>
         </div>
         <div style={{ display: 'flex', gap: 12, marginTop: 20 }}>
-          {activeRide.status === 'accepted' && <button onClick={() => updateRideStatus('arrived')} style={{ background: 'var(--color-warning)' }}>✅ وصلت للموقع</button>}
-          {activeRide.status === 'arrived' && <button onClick={() => updateRideStatus('picked_up')}>🚗 بدأت الرحلة</button>}
-          {activeRide.status === 'picked_up' && <button onClick={() => updateRideStatus('completed')} style={{ background: 'var(--color-success)' }}>✅ اكتملت الرحلة</button>}
+          {activeRide.status === 'accepted' && <Button variant="warning" onClick={() => updateRideStatus('arrived')}>✅ وصلت للموقع</Button>}
+          {activeRide.status === 'arrived' && <Button variant="primary" onClick={() => updateRideStatus('picked_up')}>🚗 بدأت الرحلة</Button>}
+          {activeRide.status === 'picked_up' && <Button variant="success" onClick={() => updateRideStatus('completed')}>✅ اكتملت الرحلة</Button>}
         </div>
       </motion.div>
     )
@@ -107,9 +108,13 @@ export default function DriverMode({ isAdmin, onOpenAdmin }) {
     <motion.div initial={{ y: 100, opacity: 0 }} animate={{ y: 0, opacity: 1 }} style={{ padding: 20 }}>
       <div className="driver-header">
         <h3>🚙 وضع السائق</h3>
-        <button className={`toggle-btn ${isOnline ? 'online' : 'offline'}`} onClick={toggleOnline}>
+        <Button
+          variant={isOnline ? 'success' : 'danger'}
+          size="sm"
+          onClick={toggleOnline}
+        >
           {isOnline ? '🟢 متصل' : '🔴 غير متصل'}
-        </button>
+        </Button>
       </div>
       <div className="stats-grid">
         <div className="stat-card"><p style={{ color: 'var(--color-gray)' }}>الرحلات</p><h4>{driverData?.total_rides || 0}</h4></div>
@@ -133,7 +138,7 @@ export default function DriverMode({ isAdmin, onOpenAdmin }) {
                   <span style={{ color: 'var(--color-gray)' }}>{ride.distance_km} كم</span>
                 </div>
                 <p style={{ marginBottom: 16 }}>{ride.pickup_address}</p>
-                <button onClick={() => acceptRide(ride.id)}>قبول الرحلة</button>
+                <Button variant="primary" onClick={() => acceptRide(ride.id)}>قبول الرحلة</Button>
               </motion.div>
             ))}
           </motion.div>
