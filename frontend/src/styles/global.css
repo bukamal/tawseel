@@ -1,11 +1,309 @@
-* { margin: 0; padding: 0; box-sizing: border-box; }
-html, body, #root { height: 100%; width: 100%; font-family: sans-serif; }
-.app { height: 100vh; width: 100vw; position: relative; }
-.map-container { position: absolute; top: 0; left: 0; right: 0; bottom: 0; z-index: 1; background: #111; }
-.bottom-sheet { position: absolute; bottom: 0; left: 0; right: 0; background: white; border-radius: 24px 24px 0 0; z-index: 10; padding: 20px; }
-.top-bar { position: fixed; top: 16px; right: 16px; z-index: 100; display: flex; gap: 8px; background: rgba(255,255,255,0.9); padding: 8px 12px; border-radius: 40px; }
-.icon-btn { background: none; border: none; font-size: 22px; cursor: pointer; }
-.onboarding-container { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: linear-gradient(135deg, #667eea, #764ba2); display: flex; align-items: center; justify-content: center; z-index: 1000; }
-.step { background: white; padding: 40px; border-radius: 20px; width: 100%; max-width: 400px; text-align: center; }
-.role-selection { display: flex; flex-direction: column; gap: 15px; }
-.role-selection button { padding: 20px; border: 2px solid #007AFF; background: white; border-radius: 12px; cursor: pointer; font-size: 16px; }
+@import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap');
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body, #root {
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+  font-family: 'Tajawal', sans-serif;
+  direction: rtl;
+  background-color: #000;
+}
+
+.app {
+  height: 100vh;
+  width: 100vw;
+  position: relative;
+}
+
+.map-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1;
+}
+
+.bottom-sheet {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: white;
+  border-radius: 24px 24px 0 0;
+  z-index: 10;
+  max-height: 60vh;
+  overflow-y: auto;
+  box-shadow: 0 -4px 20px rgba(0,0,0,0.1);
+  padding: 20px;
+}
+
+.leaflet-container {
+  height: 100%;
+  width: 100%;
+  z-index: 1;
+}
+
+/* شريط الأيقونات العلوي */
+.top-bar {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  z-index: 100;
+  display: flex;
+  gap: 8px;
+  background: rgba(255,255,255,0.95);
+  padding: 8px 12px;
+  border-radius: 40px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  backdrop-filter: blur(10px);
+}
+
+.icon-btn {
+  background: none;
+  border: none;
+  font-size: 22px;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 50%;
+  transition: background 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* تنسيقات Onboarding */
+.onboarding-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.step {
+  background: white;
+  padding: 40px 30px;
+  border-radius: 32px;
+  width: 100%;
+  max-width: 420px;
+  text-align: center;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+}
+
+.step h1 {
+  font-size: 28px;
+  font-weight: 700;
+  color: #1A1A1A;
+  margin-bottom: 12px;
+}
+
+.step h2 {
+  font-size: 24px;
+  font-weight: 700;
+  color: #1A1A1A;
+  margin-bottom: 12px;
+}
+
+.step p {
+  color: #666;
+  font-size: 16px;
+  margin-bottom: 24px;
+}
+
+.role-selection {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  margin-top: 20px;
+}
+
+.role-selection button {
+  padding: 20px;
+  border: 2px solid #007AFF;
+  background: white;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 18px;
+  font-weight: 600;
+  color: #007AFF;
+  transition: all 0.2s;
+}
+
+.role-selection button:hover {
+  background: #007AFF;
+  color: white;
+}
+
+/* حقول الإدخال */
+input[type="tel"],
+input[type="text"],
+input[type="date"],
+input[type="time"],
+select,
+textarea {
+  width: 100%;
+  padding: 16px 18px;
+  border: 2px solid #E0E0E0;
+  border-radius: 16px;
+  font-size: 16px;
+  font-family: 'Tajawal', sans-serif;
+  margin-bottom: 16px;
+  transition: border-color 0.2s;
+  background: #F9F9F9;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  outline: none;
+  border-color: #007AFF;
+  background: white;
+}
+
+label {
+  display: block;
+  text-align: right;
+  font-weight: 500;
+  margin-bottom: 6px;
+  color: #333;
+}
+
+/* أزرار */
+button {
+  width: 100%;
+  padding: 16px 24px;
+  background: #007AFF;
+  color: white;
+  border: none;
+  border-radius: 16px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+button:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+button.btn-secondary {
+  background: #F0F0F0;
+  color: #666;
+}
+
+.error {
+  color: #FF3B30;
+  font-size: 14px;
+  margin-bottom: 12px;
+  text-align: right;
+}
+
+/* تنسيقات وضع السائق */
+.driver-verification {
+  padding: 40px 20px;
+  text-align: center;
+}
+
+.driver-verification h3 {
+  font-size: 20px;
+  margin-bottom: 12px;
+}
+
+.driver-verification p {
+  color: #666;
+  margin-bottom: 20px;
+}
+
+/* تنسيقات طلب الرحلة */
+.ride-request h3 {
+  font-size: 20px;
+  margin-bottom: 20px;
+}
+
+.location-selector {
+  padding: 16px;
+  background: #F5F5F5;
+  border-radius: 16px;
+  margin-bottom: 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border: 2px solid transparent;
+  transition: all 0.2s;
+}
+
+.location-selector.selected {
+  background: #E3F2FD;
+  border-color: #007AFF;
+}
+
+.price-estimate {
+  background: #F8F9FA;
+  padding: 16px;
+  border-radius: 16px;
+  margin: 16px 0;
+}
+
+.spinner {
+  border: 3px solid #F0F0F0;
+  border-top: 3px solid #007AFF;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  animation: spin 1s linear infinite;
+  margin: 20px auto;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* تنسيقات لوحة التحكم */
+.admin-dashboard {
+  padding: 20px;
+  max-width: 1400px;
+  margin: 0 auto;
+  height: 100vh;
+  overflow-y: auto;
+  background: #F5F7FA;
+}
+
+.admin-dashboard input[type="date"] {
+  padding: 10px 14px;
+  border: 1px solid #E0E0E0;
+  border-radius: 12px;
+  background: white;
+  margin-bottom: 0;
+}
+
+/* تنسيقات متجاوبة */
+@media (max-width: 480px) {
+  .step {
+    padding: 30px 20px;
+  }
+  
+  .role-selection button {
+    padding: 16px;
+    font-size: 16px;
+  }
+  
+  button {
+    padding: 14px 20px;
+  }
+}

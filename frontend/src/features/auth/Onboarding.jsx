@@ -89,11 +89,12 @@ export default function Onboarding() {
         {step === 2 && (
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="step">
             <h2>📱 رقم الهاتف</h2>
+            <p>أدخل رقم جوالك للتواصل</p>
             <input type="tel" value={phone} onChange={e => setPhone(e.target.value)} placeholder="09xxxxxxxx" />
-            {error && <p style={{ color: 'red' }}>{error}</p>}
+            {error && <p className="error">{error}</p>}
             <div style={{ display: 'flex', gap: 10 }}>
-              <button onClick={() => setStep(1)}>رجوع</button>
-              <button onClick={handlePhoneSubmit} disabled={isSubmitting}>{isSubmitting ? 'جاري...' : 'متابعة'}</button>
+              <button onClick={() => setStep(1)} className="btn-secondary" style={{ flex: 1 }}>رجوع</button>
+              <button onClick={handlePhoneSubmit} disabled={isSubmitting} style={{ flex: 1 }}>{isSubmitting ? 'جاري...' : 'متابعة'}</button>
             </div>
           </motion.div>
         )}
@@ -103,13 +104,15 @@ export default function Onboarding() {
             <select value={vehicleInfo.type} onChange={e => setVehicleInfo({ ...vehicleInfo, type: e.target.value })}>
               <option value="economy">اقتصادي</option><option value="comfort">مريح</option><option value="business">أعمال</option><option value="van">فان</option>
             </select>
-            <input placeholder="الموديل" value={vehicleInfo.model} onChange={e => setVehicleInfo({ ...vehicleInfo, model: e.target.value })} />
+            <input placeholder="موديل السيارة" value={vehicleInfo.model} onChange={e => setVehicleInfo({ ...vehicleInfo, model: e.target.value })} />
             <input placeholder="اللون" value={vehicleInfo.color} onChange={e => setVehicleInfo({ ...vehicleInfo, color: e.target.value })} />
             <input placeholder="رقم اللوحة" value={vehicleInfo.plate} onChange={e => setVehicleInfo({ ...vehicleInfo, plate: e.target.value })} />
             <input placeholder="رقم الرخصة" value={vehicleInfo.license} onChange={e => setVehicleInfo({ ...vehicleInfo, license: e.target.value })} />
-            <label>صورة الرخصة</label><input type="file" accept="image/*" onChange={e => setLicensePhoto(e.target.files?.[0] || null)} />
-            <label>صورة المركبة</label><input type="file" accept="image/*" onChange={e => setVehiclePhoto(e.target.files?.[0] || null)} />
-            {error && <p style={{ color: 'red' }}>{error}</p>}
+            <label>صورة الرخصة</label>
+            <input type="file" accept="image/*" onChange={e => setLicensePhoto(e.target.files?.[0] || null)} />
+            <label>صورة المركبة</label>
+            <input type="file" accept="image/*" onChange={e => setVehiclePhoto(e.target.files?.[0] || null)} />
+            {error && <p className="error">{error}</p>}
             <button onClick={handleDriverRegistration} disabled={isSubmitting}>{isSubmitting ? 'جاري التسجيل...' : 'إكمال التسجيل'}</button>
           </motion.div>
         )}
