@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useAppStore } from './app/store'
+import Map from './components/map/Map'
 import Onboarding from './features/auth/Onboarding'
 import RideRequest from './features/ride-request/RideRequest'
 import DriverMode from './features/driver-mode/DriverMode'
@@ -29,9 +30,8 @@ function App() {
         (pos) => {
           const loc = [pos.coords.latitude, pos.coords.longitude]
           setLocation(loc)
-          updateDriverLocation(pos.coords)
         },
-        (err) => console.error('Geolocation error:', err),
+        (err) => console.error(err),
         { enableHighAccuracy: true }
       )
     }
@@ -51,23 +51,6 @@ function App() {
     }
   }
 
-  const updateDriverLocation = async (coords) => {
-    const { user } = useAppStore.getState()
-    if (user?.role === 'driver' && user.driver_id) {
-      await fetch(`${import.meta.env.VITE_API_URL}/api/drivers/location`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          driver_id: user.driver_id,
-          lat: coords.latitude,
-          lng: coords.longitude,
-          heading: coords.heading,
-          speed: coords.speed
-        })
-      })
-    }
-  }
-
   if (isOnboarding) return <Onboarding />
 
   if (showAdmin && isAdmin) {
@@ -78,15 +61,12 @@ function App() {
     <div className="app">
       <div className="top-bar">
         <NotificationsBell />
-        {isAdmin && (
-          <button className="icon-btn" onClick={() => setShowAdmin(true)}>📊</button>
-        )}
+        {isAdmin && <button className="icon-btn" onClick={() => setShowAdmin(true)}>📊</button>}
         <button className="icon-btn" onClick={() => useAppStore.getState().logout()}>🚪</button>
       </div>
 
       <div className="map-container">
-        {/* الخريطة سنضيفها لاحقاً بعد التأكد من عمل الأساسيات */}
-        <div style={{ color: 'white', padding: 20 }}>🗺️ الخريطة قيد التحميل...</div>
+        <Map />
       </div>
 
       <div className="bottom-sheet">
