@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { motion } from 'framer-motion'
 import { useAppStore } from '@/app/store'
 import { supabase } from '@/lib/supabase'
 import RatingModal from '@/components/common/RatingModal'
@@ -45,23 +46,28 @@ export default function ActiveRide() {
 
   return (
     <>
-      <div style={{ padding: 20 }}>
+      <motion.div initial={{ y: 100, opacity: 0 }} animate={{ y: 0, opacity: 1 }} style={{ padding: 20 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
           <h3>{getStatusText(activeRide.status)}</h3>
-          <span style={{ background: 'var(--gray-light)', padding: '6px 16px', borderRadius: 30, fontWeight: 600 }}>
+          <span style={{ background: 'var(--color-gray-light)', padding: '6px 16px', borderRadius: 30, fontWeight: 600 }}>
             {Math.floor(elapsed / 60)}:{String(elapsed % 60).padStart(2, '0')}
           </span>
         </div>
         {activeRide.driver && (
-          <div className="request-card" style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-            <div style={{ width: 50, height: 50, borderRadius: 25, background: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: 24 }}>👤</div>
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="request-card"
+            style={{ display: 'flex', alignItems: 'center', gap: 16 }}
+          >
+            <div style={{ width: 50, height: 50, borderRadius: 25, background: 'var(--color-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: 24 }}>👤</div>
             <div style={{ flex: 1 }}>
               <p style={{ fontWeight: 700 }}>{activeRide.driver.user?.full_name}</p>
-              <p style={{ color: 'var(--gray)', fontSize: 14 }}>{activeRide.driver.vehicle_model} ({activeRide.driver.plate_number})</p>
-              <p style={{ color: 'var(--gray)', fontSize: 14 }}>⭐ {activeRide.driver.rating}</p>
+              <p style={{ color: 'var(--color-gray)', fontSize: 14 }}>{activeRide.driver.vehicle_model} ({activeRide.driver.plate_number})</p>
+              <p style={{ color: 'var(--color-gray)', fontSize: 14 }}>⭐ {activeRide.driver.rating}</p>
             </div>
-            <a href={`tel:${activeRide.driver.user?.phone}`} style={{ background: 'var(--success)', padding: '10px 16px', borderRadius: 30, color: 'white', textDecoration: 'none' }}>📞</a>
-          </div>
+            <a href={`tel:${activeRide.driver.user?.phone}`} style={{ background: 'var(--color-success)', padding: '10px 16px', borderRadius: 30, color: 'white', textDecoration: 'none' }}>📞</a>
+          </motion.div>
         )}
         <div style={{ marginTop: 20 }}>
           <div className="location-card"><span>📍</span> {activeRide.pickup_address}</div>
@@ -71,9 +77,9 @@ export default function ActiveRide() {
           <div className="price-total">{activeRide.payment_method === 'stars' ? formatStarsPrice(activeRide.stars_price) : formatPrice(activeRide.price)}</div>
         </div>
         {['pending', 'searching', 'accepted'].includes(activeRide.status) && (
-          <button className="btn-danger" onClick={handleCancel}>إلغاء الرحلة</button>
+          <motion.button whileTap={{ scale: 0.97 }} className="btn-danger" onClick={handleCancel}>إلغاء الرحلة</motion.button>
         )}
-      </div>
+      </motion.div>
       {showRating && targetUserId && (
         <RatingModal ride={activeRide} userId={user?.id} targetUserId={targetUserId} targetType={targetType} onClose={() => { setShowRating(false); resetRide() }} onSuccess={() => { setShowRating(false); resetRide() }} />
       )}
