@@ -1,0 +1,3 @@
+// لتطبيق الزر الذري في Onboarding (سيتم دمجه يدوياً لاحقاً)
+// استبدال <button> بـ <Button> من atoms/Button
+// مثال: <Button variant="primary" onClick={handlePhoneSubmit}>متابعة</Button>
