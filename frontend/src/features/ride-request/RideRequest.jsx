@@ -20,6 +20,12 @@ export default function RideRequest() {
   const [scheduledDate, setScheduledDate] = useState('')
   const [scheduledTime, setScheduledTime] = useState('')
 
+  const vehicleTypes = [
+    { id: 'economy', name: 'اقتصادي', icon: '🚗', baseFare: 10, perKm: 2 },
+    { id: 'comfort', name: 'مريح', icon: '🚙', baseFare: 15, perKm: 3 },
+    { id: 'business', name: 'أعمال', icon: '🚘', baseFare: 25, perKm: 5 }
+  ]
+
   useEffect(() => {
     if (currentLocation && !pickupLocation) {
       setPickup(currentLocation)
@@ -68,7 +74,7 @@ export default function RideRequest() {
 
   const handleRequest = async () => {
     if (!pickupLocation || !dropoffLocation) return
-    if (isScheduled && (!scheduledDate || !scheduledTime)) return alert('الرجاء تحديد وقت الجدولة')
+    if (isScheduled && (!scheduledDate || !scheduledTime)) return alert('حدد وقت الجدولة')
     hapticFeedback('medium')
     setIsSearching(true)
     try {
@@ -99,51 +105,70 @@ export default function RideRequest() {
       } else {
         setActiveRide(data.ride)
       }
-    } catch (e) { alert('فشل الطلب') }
+    } catch { alert('فشل الطلب') }
     finally { setIsSearching(false) }
   }
 
   if (isSearching) return <div style={{ padding: 30, textAlign: 'center' }}><div className="spinner" /><p>جاري البحث عن سائق...</p></div>
 
   return (
-    <div style={{ padding: 20 }}>
+    <div className="ride-request">
       <h3>🚗 اطلب توصيلة</h3>
-      <div onClick={() => setShowPicker('pickup')} style={{ padding: 15, background: pickupLocation ? '#E3F2FD' : '#F5F5F5', borderRadius: 12, marginBottom: 10 }}>
-        <span>📍</span> {pickupAddress || 'اضغط لتحديد نقطة الانطلاق'}
-      </div>
-      <div onClick={() => setShowPicker('dropoff')} style={{ padding: 15, background: dropoffLocation ? '#FFEBEE' : '#F5F5F5', borderRadius: 12, marginBottom: 10 }}>
-        <span>🎯</span> {dropoffAddress || 'اضغط لتحديد الوجهة'}
+      
+      <div className={`location-card ${pickupLocation ? 'selected' : ''}`} onClick={() => setShowPicker('pickup')}>
+        <span>📍</span>
+        <div style={{ flex: 1 }}>
+          <p style={{ fontWeight: 600, marginBottom: 4 }}>نقطة الانطلاق</p>
+          <p style={{ color: 'var(--gray)', fontSize: 14 }}>{pickupAddress || 'اضغط للتحديد'}</p>
+        </div>
       </div>
       
-      <div style={{ marginBottom: 15 }}>
-        <p>طريقة الدفع:</p>
-        <div style={{ display: 'flex', gap: 10 }}>
-          <button onClick={() => setPaymentMethod('cash')} style={{ flex: 1, padding: 12, background: paymentMethod === 'cash' ? '#007AFF' : '#F5F5F5', color: paymentMethod === 'cash' ? 'white' : 'black', border: 'none', borderRadius: 8 }}>💵 نقدي</button>
-          <button onClick={() => setPaymentMethod('stars')} style={{ flex: 1, padding: 12, background: paymentMethod === 'stars' ? '#FFB800' : '#F5F5F5', color: paymentMethod === 'stars' ? 'white' : 'black', border: 'none', borderRadius: 8 }}>⭐ نجوم</button>
+      <div className={`location-card ${dropoffLocation ? 'selected' : ''}`} onClick={() => setShowPicker('dropoff')}>
+        <span>🎯</span>
+        <div style={{ flex: 1 }}>
+          <p style={{ fontWeight: 600, marginBottom: 4 }}>الوجهة</p>
+          <p style={{ color: 'var(--gray)', fontSize: 14 }}>{dropoffAddress || 'اضغط للتحديد'}</p>
         </div>
       </div>
 
-      <div style={{ marginBottom: 15 }}>
-        <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <input type="checkbox" checked={isScheduled} onChange={e => setIsScheduled(e.target.checked)} /> 📅 جدولة الرحلة لوقت لاحق
-        </label>
-        {isScheduled && (
-          <div style={{ display: 'flex', gap: 10, marginTop: 10 }}>
-            <input type="date" value={scheduledDate} onChange={e => setScheduledDate(e.target.value)} min={new Date().toISOString().split('T')[0]} style={{ flex: 1, padding: 10, border: '1px solid #ddd', borderRadius: 8 }} />
-            <input type="time" value={scheduledTime} onChange={e => setScheduledTime(e.target.value)} style={{ flex: 1, padding: 10, border: '1px solid #ddd', borderRadius: 8 }} />
-          </div>
-        )}
+      <div style={{ margin: '20px 0' }}>
+        <p style={{ fontWeight: 600, marginBottom: 12 }}>نوع المركبة</p>
+        <div className="vehicle-grid">
+          {vehicleTypes.map(v => (
+            <div key={v.id} className={`vehicle-card ${selectedVehicle === v.id ? 'active' : ''}`} onClick={() => setSelectedVehicle(v.id)}>
+              <div style={{ fontSize: 28, marginBottom: 4 }}>{v.icon}</div>
+              <p style={{ fontWeight: 500 }}>{v.name}</p>
+              <small>{v.baseFare} ل.س</small>
+            </div>
+          ))}
+        </div>
       </div>
 
-      {estimatedPrice && distance && (
-        <div style={{ padding: 15, background: '#F8F9FA', borderRadius: 12, marginBottom: 15 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>المسافة:</span><span>{distance.toFixed(1)} كم</span></div>
-          {surge > 1 && <div style={{ display: 'flex', justifyContent: 'space-between', color: '#FF9800' }}><span>⚡ ذروة {surge}x</span></div>}
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 8 }}><span>السعر:</span><strong>{paymentMethod === 'stars' ? formatStarsPrice(estimatedStars) : formatPrice(estimatedPrice)}</strong></div>
+      <div className="payment-toggle">
+        <button className={paymentMethod === 'cash' ? 'active' : ''} onClick={() => setPaymentMethod('cash')}>💵 نقدي</button>
+        <button className={paymentMethod === 'stars' ? 'active' : ''} onClick={() => setPaymentMethod('stars')}>⭐ نجوم</button>
+      </div>
+
+      <label style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
+        <input type="checkbox" checked={isScheduled} onChange={e => setIsScheduled(e.target.checked)} style={{ width: 20 }} />
+        <span>📅 جدولة الرحلة لوقت لاحق</span>
+      </label>
+      {isScheduled && (
+        <div style={{ display: 'flex', gap: 12, marginBottom: 20 }}>
+          <input type="date" value={scheduledDate} onChange={e => setScheduledDate(e.target.value)} min={new Date().toISOString().split('T')[0]} />
+          <input type="time" value={scheduledTime} onChange={e => setScheduledTime(e.target.value)} />
         </div>
       )}
 
-      <button onClick={handleRequest} disabled={!pickupLocation || !dropoffLocation} style={{ width: '100%', padding: 15, background: '#007AFF', color: 'white', border: 'none', borderRadius: 12 }}>
+      {estimatedPrice && distance && (
+        <div className="price-card">
+          <div className="price-row"><span>المسافة</span><span>{distance.toFixed(1)} كم</span></div>
+          {surge > 1 && <div className="price-row" style={{ color: 'var(--warning)' }}><span>⚡ تسعير الذروة</span><span>{surge}x</span></div>}
+          <div className="price-total">{paymentMethod === 'stars' ? formatStarsPrice(estimatedStars) : formatPrice(estimatedPrice)}</div>
+        </div>
+      )}
+
+      <button onClick={handleRequest} disabled={!pickupLocation || !dropoffLocation}>
         {isScheduled ? '📅 جدولة الرحلة' : paymentMethod === 'stars' ? `⭐ ادفع ${estimatedStars} نجمة` : '🔍 ابحث عن سائق'}
       </button>
 

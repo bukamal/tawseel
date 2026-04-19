@@ -70,9 +70,10 @@ export default function DriverMode({ isAdmin, onOpenAdmin }) {
   if (!driverData?.is_verified) {
     return (
       <div className="driver-verification">
-        <h3>⏳ حسابك قيد المراجعة</h3>
-        <p>سنقوم بتفعيل حسابك خلال 24 ساعة</p>
-        {isAdmin && <button onClick={onOpenAdmin}>👑 توثيق من لوحة التحكم</button>}
+        <div style={{ fontSize: 56, marginBottom: 20 }}>⏳</div>
+        <h3 style={{ marginBottom: 12 }}>حسابك قيد المراجعة</h3>
+        <p style={{ color: 'var(--gray)', marginBottom: 20 }}>سنقوم بتفعيل حسابك خلال 24 ساعة</p>
+        {isAdmin && <button onClick={onOpenAdmin} style={{ background: 'var(--secondary)' }}>👑 توثيق من لوحة التحكم</button>}
       </div>
     )
   }
@@ -80,15 +81,22 @@ export default function DriverMode({ isAdmin, onOpenAdmin }) {
   if (activeRide) {
     return (
       <div style={{ padding: 20 }}>
-        <h3>🚗 رحلة نشطة</h3>
-        <p><strong>الزبون:</strong> {activeRide.customer?.full_name} | <a href={`tel:${activeRide.customer?.phone}`}>📞</a></p>
-        <p><strong>من:</strong> {activeRide.pickup_address}</p>
-        <p><strong>إلى:</strong> {activeRide.dropoff_address}</p>
-        <p><strong>السعر:</strong> {activeRide.payment_method === 'stars' ? formatStarsPrice(activeRide.stars_price) : formatPrice(activeRide.price)}</p>
-        <div style={{ display: 'flex', gap: 10, marginTop: 15 }}>
-          {activeRide.status === 'accepted' && <button onClick={() => updateRideStatus('arrived')} style={{ flex: 1, padding: 12, background: '#FFA500', color: 'white', border: 'none', borderRadius: 8 }}>✅ وصلت للموقع</button>}
-          {activeRide.status === 'arrived' && <button onClick={() => updateRideStatus('picked_up')} style={{ flex: 1, padding: 12, background: '#007AFF', color: 'white', border: 'none', borderRadius: 8 }}>🚗 بدأت الرحلة</button>}
-          {activeRide.status === 'picked_up' && <button onClick={() => updateRideStatus('completed')} style={{ flex: 1, padding: 12, background: '#34C759', color: 'white', border: 'none', borderRadius: 8 }}>✅ اكتملت الرحلة</button>}
+        <h3 style={{ marginBottom: 20 }}>🚗 رحلة نشطة</h3>
+        <div className="request-card">
+          <p><strong>الزبون:</strong> {activeRide.customer?.full_name}</p>
+          <p><strong>الهاتف:</strong> <a href={`tel:${activeRide.customer?.phone}`} style={{ color: 'var(--primary)' }}>{activeRide.customer?.phone}</a></p>
+          <div style={{ marginTop: 16 }}>
+            <p style={{ color: 'var(--gray)' }}>من: {activeRide.pickup_address}</p>
+            <p style={{ color: 'var(--gray)' }}>إلى: {activeRide.dropoff_address}</p>
+          </div>
+          <p style={{ fontSize: 24, fontWeight: 700, marginTop: 16, color: 'var(--primary)' }}>
+            {activeRide.payment_method === 'stars' ? formatStarsPrice(activeRide.stars_price) : formatPrice(activeRide.price)}
+          </p>
+        </div>
+        <div style={{ display: 'flex', gap: 12, marginTop: 20 }}>
+          {activeRide.status === 'accepted' && <button onClick={() => updateRideStatus('arrived')} style={{ background: 'var(--warning)' }}>✅ وصلت للموقع</button>}
+          {activeRide.status === 'arrived' && <button onClick={() => updateRideStatus('picked_up')}>🚗 بدأت الرحلة</button>}
+          {activeRide.status === 'picked_up' && <button onClick={() => updateRideStatus('completed')} style={{ background: 'var(--success)' }}>✅ اكتملت الرحلة</button>}
         </div>
       </div>
     )
@@ -96,25 +104,39 @@ export default function DriverMode({ isAdmin, onOpenAdmin }) {
 
   return (
     <div style={{ padding: 20 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 20 }}>
+      <div className="driver-header">
         <h3>🚙 وضع السائق</h3>
-        <button onClick={toggleOnline} style={{ padding: 10, background: isOnline ? '#34C759' : '#FF3B30', color: 'white', border: 'none', borderRadius: 8 }}>
+        <button className={`toggle-btn ${isOnline ? 'online' : 'offline'}`} onClick={toggleOnline}>
           {isOnline ? '🟢 متصل' : '🔴 غير متصل'}
         </button>
       </div>
+      <div className="stats-grid">
+        <div className="stat-card">
+          <p style={{ color: 'var(--gray)' }}>الرحلات</p>
+          <h4>{driverData?.total_rides || 0}</h4>
+        </div>
+        <div className="stat-card">
+          <p style={{ color: 'var(--gray)' }}>رصيد النجوم</p>
+          <h4 style={{ color: '#FFB800' }}>⭐ {driverData?.balance_stars || 0}</h4>
+        </div>
+      </div>
       {isOnline && pendingRides.length > 0 && (
         <div>
-          <h4>طلبات جديدة ({pendingRides.length})</h4>
+          <h4 style={{ marginBottom: 16 }}>طلبات جديدة ({pendingRides.length})</h4>
           {pendingRides.map(ride => (
-            <div key={ride.id} style={{ background: '#f0f0f0', padding: 15, borderRadius: 12, marginBottom: 10 }}>
-              <p>💰 {formatPrice(ride.price)} | 📍 {ride.distance_km} كم</p>
-              <p>{ride.pickup_address}</p>
-              <button onClick={() => acceptRide(ride.id)} style={{ background: '#007AFF', color: 'white', border: 'none', padding: 10, borderRadius: 8, width: '100%' }}>قبول</button>
+            <div key={ride.id} className="request-card">
+              {ride.surge_multiplier > 1 && <span className="surge-badge">⚡ ذروة {ride.surge_multiplier}x</span>}
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
+                <span style={{ fontWeight: 700 }}>{formatPrice(ride.price)}</span>
+                <span style={{ color: 'var(--gray)' }}>{ride.distance_km} كم</span>
+              </div>
+              <p style={{ marginBottom: 16 }}>{ride.pickup_address}</p>
+              <button onClick={() => acceptRide(ride.id)}>قبول الرحلة</button>
             </div>
           ))}
         </div>
       )}
-      {isOnline && pendingRides.length === 0 && <p>🕐 في انتظار الطلبات...</p>}
+      {isOnline && pendingRides.length === 0 && <p style={{ textAlign: 'center', color: 'var(--gray)', padding: 40 }}>🕐 في انتظار الطلبات...</p>}
     </div>
   )
 }

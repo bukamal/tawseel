@@ -46,41 +46,36 @@ export default function ActiveRide() {
   return (
     <>
       <div style={{ padding: 20 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 15 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
           <h3>{getStatusText(activeRide.status)}</h3>
-          <span>{Math.floor(elapsed / 60)}:{String(elapsed % 60).padStart(2, '0')}</span>
+          <span style={{ background: 'var(--gray-light)', padding: '6px 16px', borderRadius: 30, fontWeight: 600 }}>
+            {Math.floor(elapsed / 60)}:{String(elapsed % 60).padStart(2, '0')}
+          </span>
         </div>
         {activeRide.driver && (
-          <div style={{ display: 'flex', alignItems: 'center', padding: 15, background: '#f5f5f5', borderRadius: 12, marginBottom: 15 }}>
-            <span style={{ fontSize: 24, marginRight: 10 }}>👤</span>
-            <div>
-              <p><strong>{activeRide.driver.user?.full_name}</strong></p>
-              <p>{activeRide.driver.vehicle_model} ({activeRide.driver.plate_number})</p>
-              <p>⭐ {activeRide.driver.rating}</p>
+          <div className="request-card" style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+            <div style={{ width: 50, height: 50, borderRadius: 25, background: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: 24 }}>👤</div>
+            <div style={{ flex: 1 }}>
+              <p style={{ fontWeight: 700 }}>{activeRide.driver.user?.full_name}</p>
+              <p style={{ color: 'var(--gray)', fontSize: 14 }}>{activeRide.driver.vehicle_model} ({activeRide.driver.plate_number})</p>
+              <p style={{ color: 'var(--gray)', fontSize: 14 }}>⭐ {activeRide.driver.rating}</p>
             </div>
-            <a href={`tel:${activeRide.driver.user?.phone}`} style={{ marginLeft: 'auto', padding: 10, background: '#34C759', color: 'white', borderRadius: 8, textDecoration: 'none' }}>📞</a>
+            <a href={`tel:${activeRide.driver.user?.phone}`} style={{ background: 'var(--success)', padding: '10px 16px', borderRadius: 30, color: 'white', textDecoration: 'none' }}>📞</a>
           </div>
         )}
-        <div style={{ marginBottom: 15 }}>
-          <div style={{ padding: 12, background: '#E3F2FD', borderRadius: 8, marginBottom: 8 }}><small>من:</small> {activeRide.pickup_address}</div>
-          <div style={{ padding: 12, background: '#FFEBEE', borderRadius: 8 }}><small>إلى:</small> {activeRide.dropoff_address}</div>
+        <div style={{ marginTop: 20 }}>
+          <div className="location-card"><span>📍</span> {activeRide.pickup_address}</div>
+          <div className="location-card"><span>🎯</span> {activeRide.dropoff_address}</div>
         </div>
-        <div style={{ padding: 15, background: '#F8F9FA', borderRadius: 12, marginBottom: 15, textAlign: 'center' }}>
-          <strong>السعر: {activeRide.payment_method === 'stars' ? formatStarsPrice(activeRide.stars_price) : formatPrice(activeRide.price)}</strong>
+        <div className="price-card" style={{ marginTop: 20 }}>
+          <div className="price-total">{activeRide.payment_method === 'stars' ? formatStarsPrice(activeRide.stars_price) : formatPrice(activeRide.price)}</div>
         </div>
         {['pending', 'searching', 'accepted'].includes(activeRide.status) && (
-          <button onClick={handleCancel} style={{ width: '100%', padding: 15, background: '#FF3B30', color: 'white', border: 'none', borderRadius: 12 }}>إلغاء الرحلة</button>
+          <button className="btn-danger" onClick={handleCancel}>إلغاء الرحلة</button>
         )}
       </div>
       {showRating && targetUserId && (
-        <RatingModal
-          ride={activeRide}
-          userId={user?.id}
-          targetUserId={targetUserId}
-          targetType={targetType}
-          onClose={() => { setShowRating(false); resetRide() }}
-          onSuccess={() => { setShowRating(false); resetRide() }}
-        />
+        <RatingModal ride={activeRide} userId={user?.id} targetUserId={targetUserId} targetType={targetType} onClose={() => { setShowRating(false); resetRide() }} onSuccess={() => { setShowRating(false); resetRide() }} />
       )}
     </>
   )
