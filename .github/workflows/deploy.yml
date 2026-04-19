@@ -33,3 +33,4 @@ jobs:
           projectName: tawseel-frontend
           directory: frontend/dist
           gitHubToken: ${{ secrets.GITHUB_TOKEN }}
+          createGitHubDeployment: false
