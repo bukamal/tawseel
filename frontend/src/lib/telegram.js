@@ -1,29 +1,36 @@
 export const initTelegram = () => {
-  if (window.Telegram?.WebApp) {
-    const tg = window.Telegram.WebApp
-    tg.ready()
-    tg.expand()
-    return tg
-  }
-  return null
-}
+  const tg = window.Telegram?.WebApp;
+  if (!tg) return null;
+  
+  tg.ready();
+  tg.expand();
+  
+  const params = new URLSearchParams(window.location.search);
+  return {
+    tg,
+    user: tg.initDataUnsafe?.user,
+    telegramId: tg.initDataUnsafe?.user?.id ?? params.get('tg_id'),
+    chatId: params.get('chat_id'),
+    initData: tg.initData
+  };
+};
 
 export const hapticFeedback = (type = 'light') => {
-  window.Telegram?.WebApp?.HapticFeedback?.impactOccurred(type)
-}
+  window.Telegram?.WebApp?.HapticFeedback?.impactOccurred(type);
+};
 
 export const showAlert = (message) => {
   if (window.Telegram?.WebApp) {
-    window.Telegram.WebApp.showAlert(message)
+    window.Telegram.WebApp.showAlert(message);
   } else {
-    alert(message)
+    alert(message);
   }
-}
+};
 
 export const showConfirm = (message, callback) => {
   if (window.Telegram?.WebApp) {
-    window.Telegram.WebApp.showConfirm(message, callback)
+    window.Telegram.WebApp.showConfirm(message, callback);
   } else {
-    callback(confirm(message))
+    callback(confirm(message));
   }
-}
+};

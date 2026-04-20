@@ -1,5 +1,5 @@
-import { create } from 'zustand'
-import { persist } from 'zustand/middleware'
+import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 
 export const useAppStore = create(
   persist(
@@ -25,16 +25,19 @@ export const useAppStore = create(
       setActiveRide: (ride) => set({ activeRide: ride }),
       setNearbyDrivers: (drivers) => set({ nearbyDrivers: drivers }),
       setSelectedVehicle: (type) => set({ selectedVehicle: type }),
+      
       updateRideStatus: (status) => {
-        const ride = get().activeRide
-        if (ride) set({ activeRide: { ...ride, status } })
+        const ride = get().activeRide;
+        if (ride) set({ activeRide: { ...ride, status } });
       },
+
       resetRide: () => set({
         activeRide: null,
         pickupLocation: null,
         dropoffLocation: null,
         nearbyDrivers: []
       }),
+
       logout: () => set({
         user: null,
         isOnboarding: true,
@@ -43,6 +46,9 @@ export const useAppStore = create(
         dropoffLocation: null
       })
     }),
-    { name: 'tawseel-storage' }
+    {
+      name: 'tawseel-storage',
+      partialize: (state) => ({ user: state.user })
+    }
   )
-)
+);

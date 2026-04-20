@@ -1,67 +1,89 @@
-import { useEffect, useState } from 'react'
-import { useAppStore } from './app/store'
-import { useTelegramTheme } from './hooks/useTelegramTheme'
-import Map from './components/map/Map'
-import Onboarding from './features/auth/Onboarding'
-import RideRequest from './features/ride-request/RideRequest'
-import DriverMode from './features/driver-mode/DriverMode'
-import ActiveRide from './features/ride-request/ActiveRide'
-import AdminDashboard from './features/admin/AdminDashboard'
+import { useEffect, useState } from 'react';
+import { initTelegram } from '@/lib/telegram';
+import { useAppStore } from '@/app/store';
+import Map from '@/components/map/Map';
+import Onboarding from '@/features/auth/Onboarding';
+import RideRequest from '@/features/ride-request/RideRequest';
+import DriverMode from '@/features/driver-mode/DriverMode';
+import ActiveRide from '@/features/ride-request/ActiveRide';
+import NotificationsBell from '@/components/common/NotificationsBell';
+import AdminDashboard from '@/features/admin/AdminDashboard';
 
 function App() {
-  const { user, setUser, setLocation, isOnboarding, activeRide, resetRide } = useAppStore()
-  const [isAdmin, setIsAdmin] = useState(false)
-  const [showAdmin, setShowAdmin] = useState(false)
-
-  useTelegramTheme()
+  const { user, setUser, setLocation, isOnboarding, activeRide } = useAppStore();
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [showAdmin, setShowAdmin] = useState(false);
+  const [appError, setAppError] = useState(null);
 
   useEffect(() => {
-    const tg = window.Telegram?.WebApp
-    const params = new URLSearchParams(window.location.search)
-    const telegramId = tg?.initDataUnsafe?.user?.id ?? params.get('tg_id')
-    if (telegramId) fetchUser(telegramId)
+    const tgData = initTelegram();
+    if (tgData?.telegramId) {
+      fetchUser(tgData.telegramId).catch(() => setAppError('فشل تحميل بيانات المستخدم'));
+    }
 
     if (navigator.geolocation) {
       navigator.geolocation.watchPosition(
-        pos => setLocation([pos.coords.latitude, pos.coords.longitude]),
-        err => console.error(err),
+        (pos) => {
+          const loc = [pos.coords.latitude, pos.coords.longitude];
+          setLocation(loc);
+          updateDriverLocation(pos.coords);
+        },
+        (err) => console.error('Geolocation error:', err),
         { enableHighAccuracy: true }
-      )
+      );
     }
-  }, [])
+  }, []);
 
   const fetchUser = async (telegramId) => {
-    try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/users/${telegramId}`)
-      const data = await res.json()
-      if (data.user) {
-        setUser(data.user)
-        const adminIds = (import.meta.env.VITE_ADMIN_TELEGRAM_IDS || '').split(',')
-        setIsAdmin(data.user.role === 'admin' || adminIds.includes(String(telegramId)))
-      }
-    } catch (error) {
-      console.error(error)
+    const res = await fetch(`${import.meta.env.VITE_API_URL}/api/users/${telegramId}`);
+    if (!res.ok) throw new Error('User not found');
+    const data = await res.json();
+    if (data.user) {
+      setUser(data.user);
+      const adminIds = (import.meta.env.VITE_ADMIN_TELEGRAM_IDS || '').split(',');
+      setIsAdmin(data.user.role === 'admin' || adminIds.includes(String(telegramId)));
     }
+  };
+
+  const updateDriverLocation = async (coords) => {
+    const currentUser = useAppStore.getState().user;
+    if (currentUser?.role === 'driver' && currentUser.driver_id) {
+      await fetch(`${import.meta.env.VITE_API_URL}/api/drivers/location`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          driver_id: currentUser.driver_id, 
+          lat: coords.latitude, 
+          lng: coords.longitude, 
+          heading: coords.heading, 
+          speed: coords.speed 
+        })
+      });
+    }
+  };
+
+  if (appError) {
+    return <div style={{ color: 'white', padding: 20 }}>خطأ: {appError}</div>;
   }
 
-  const handleBack = () => {
-    resetRide()
-    useAppStore.getState().logout()
-  }
+  if (isOnboarding) return <Onboarding />;
 
-  if (showAdmin && isAdmin) return <AdminDashboard onClose={() => setShowAdmin(false)} />
-  if (isOnboarding) return <Onboarding isAdmin={isAdmin} onOpenAdmin={() => setShowAdmin(true)} />
+  if (showAdmin && isAdmin) {
+    return <AdminDashboard onClose={() => setShowAdmin(false)} />;
+  }
 
   return (
     <div className="app">
-      {!isOnboarding && (
-        <button className="back-button" onClick={handleBack} title="الرجوع إلى القائمة الرئيسية">
-          ←
-        </button>
-      )}
+      <div className="top-bar">
+        <NotificationsBell />
+        {isAdmin && <button className="icon-btn" onClick={() => setShowAdmin(true)}>📊</button>}
+        <button className="icon-btn" onClick={() => useAppStore.getState().logout()}>🚪</button>
+      </div>
+
       <div className="map-container">
         <Map />
       </div>
+
       <div className="bottom-sheet">
         {user?.role === 'driver' ? (
           <DriverMode isAdmin={isAdmin} onOpenAdmin={() => setShowAdmin(true)} />
@@ -72,7 +94,7 @@ function App() {
         )}
       </div>
     </div>
-  )
+  );
 }
 
-export default App
+export default App;

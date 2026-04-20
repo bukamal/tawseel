@@ -13,6 +13,13 @@ export default defineConfig({
     }
   },
   base: './',
-  server: { port: 3000 },
-  build: { outDir: 'dist', emptyOutDir: true }
+  server: { 
+    port: 3000,
+    host: true
+  },
+  build: { 
+    outDir: 'dist', 
+    emptyOutDir: true,
+    sourcemap: true
+  }
 })
