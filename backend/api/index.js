@@ -191,11 +191,46 @@ export default async function handler(req, res) {
       }
       if (method === 'POST' && action === 'register') {
         const { user_id, type, model, color, plate, license, license_photo_url, vehicle_photo_url } = body
-        const { data: driver } = await supabase.from('drivers').insert({
+
+        // ✅ التحقق من وجود user_id
+        if (!user_id) {
+          return res.status(400).json({ error: 'user_id_missing', message: 'معرف المستخدم مفقود' })
+        }
+
+        // ✅ التحقق من وجود المستخدم
+        const { data: existingUser, error: userError } = await supabase
+          .from('users')
+          .select('id')
+          .eq('id', user_id)
+          .single()
+        if (userError || !existingUser) {
+          return res.status(404).json({ error: 'user_not_found', message: 'المستخدم غير موجود' })
+        }
+
+        // ✅ التحقق من أن المستخدم ليس لديه حساب سائق بالفعل
+        const { data: existingDriver } = await supabase
+          .from('drivers')
+          .select('id')
+          .eq('user_id', user_id)
+          .maybeSingle()
+        if (existingDriver) {
+          return res.status(409).json({ error: 'driver_already_exists', message: 'لديك حساب سائق بالفعل' })
+        }
+
+        const { data: driver, error } = await supabase.from('drivers').insert({
           user_id, vehicle_type: type, vehicle_model: model, vehicle_color: color,
           plate_number: plate, license_number: license, license_photo_url, vehicle_photo_url,
           is_available: false, is_verified: false
         }).select().single()
+
+        if (error) {
+          console.error('Driver registration error:', error)
+          if (error.message.includes('violates foreign key')) {
+            return res.status(400).json({ error: 'invalid_user_id', message: 'معرف المستخدم غير صالح' })
+          }
+          return res.status(500).json({ error: error.message })
+        }
+
         await supabase.from('users').update({ role: 'driver' }).eq('id', user_id)
         return res.status(201).json({ driver })
       }
@@ -295,7 +330,7 @@ export default async function handler(req, res) {
 
     return res.status(404).json({ error: 'Not found' })
   } catch (error) {
-    console.error(error)
-    return res.status(500).json({ error: error.message })
+    console.error('Unhandled error:', error)
+    return res.status(500).json({ error: 'Internal server error' })
   }
 }
