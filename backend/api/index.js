@@ -131,11 +131,39 @@ export default async function handler(req, res) {
       if (method === 'POST' && segments[2] === 'update') {
         let { telegram_id, chat_id, full_name, username, phone, role } = body
         const finalFullName = full_name || 'مستخدم'
+
+        // ✅ فحص رقم الهاتف قبل التحديث/الإدراج
+        if (phone) {
+          const { data: existingPhoneUser } = await supabase
+            .from('users')
+            .select('telegram_id, id')
+            .eq('phone', phone)
+            .maybeSingle()
+
+          if (existingPhoneUser && String(existingPhoneUser.telegram_id) !== String(telegram_id)) {
+            return res.status(409).json({
+              error: 'phone_already_exists',
+              message: 'رقم الهاتف مستخدم من قبل حساب آخر'
+            })
+          }
+        }
+
         const { data: user, error } = await supabase
           .from('users')
-          .upsert({ telegram_id, chat_id, full_name: finalFullName, username, phone, role, updated_at: new Date().toISOString() }, { onConflict: 'telegram_id' })
-          .select().single()
-        if (error) return res.status(500).json({ error: error.message })
+          .upsert(
+            { telegram_id, chat_id, full_name: finalFullName, username, phone, role, updated_at: new Date().toISOString() },
+            { onConflict: 'telegram_id' }
+          )
+          .select()
+          .single()
+
+        if (error) {
+          if (error.message.includes('users_phone_key')) {
+            return res.status(409).json({ error: 'phone_already_exists' })
+          }
+          return res.status(500).json({ error: error.message })
+        }
+
         return res.status(200).json({ user })
       }
     }
