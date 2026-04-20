@@ -1,29 +1,29 @@
-import { useState } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
-import { hapticFeedback } from '@/lib/telegram'
+import { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { hapticFeedback } from '@/lib/telegram';
 
 export default function RatingModal({ ride, userId, targetUserId, targetType, onClose, onSuccess }) {
-  const [rating, setRating] = useState(0)
-  const [hover, setHover] = useState(0)
-  const [comment, setComment] = useState('')
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const targetName = targetType === 'driver' ? ride.driver?.user?.full_name || 'السائق' : ride.customer?.full_name || 'الزبون'
+  const [rating, setRating] = useState(0);
+  const [hover, setHover] = useState(0);
+  const [comment, setComment] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const targetName = targetType === 'driver' ? ride.driver?.user?.full_name || 'السائق' : ride.customer?.full_name || 'الزبون';
 
   const submit = async () => {
-    if (!rating) return
-    hapticFeedback('medium')
-    setIsSubmitting(true)
+    if (!rating) return;
+    hapticFeedback('medium');
+    setIsSubmitting(true);
     try {
       await fetch(`${import.meta.env.VITE_API_URL}/api/ratings/create`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ride_id: ride.id, from_user_id: userId, to_user_id: targetUserId, rating, comment })
-      })
-      hapticFeedback('success')
-      onSuccess?.()
+      });
+      hapticFeedback('success');
+      onSuccess?.();
     } catch { }
-    finally { setIsSubmitting(false) }
-  }
+    finally { setIsSubmitting(false); }
+  };
 
   return (
     <AnimatePresence>
@@ -43,5 +43,5 @@ export default function RatingModal({ ride, userId, targetUserId, targetType, on
         </motion.div>
       </motion.div>
     </AnimatePresence>
-  )
+  );
 }

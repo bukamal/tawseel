@@ -39,20 +39,13 @@ export default function Onboarding({ isAdmin, onOpenAdmin }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ telegram_id: telegramId, chat_id: chatId, full_name: fullName, phone: cleanPhone, role })
       });
+      if (!res.ok) throw new Error(await res.text());
       const data = await res.json();
-      
-      if (!res.ok) {
-        if (res.status === 409 || data.error === 'phone_already_exists') {
-          throw new Error('رقم الهاتف مسجل مسبقاً. إذا كان هذا رقمك، يرجى التواصل مع الدعم.');
-        }
-        throw new Error(data.message || 'فشل في حفظ البيانات');
-      }
-      
       setUser(data.user);
       if (role === 'driver') setStep(3);
     } catch (err) {
       setError(err.message);
-      showAlert(err.message);
+      showAlert('حدث خطأ أثناء الحفظ');
     } finally {
       setIsSubmitting(false);
     }

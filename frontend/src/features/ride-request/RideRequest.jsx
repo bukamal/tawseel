@@ -1,55 +1,58 @@
-import { useState, useEffect } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
-import { useAppStore } from '@/app/store'
-import LocationPicker from '@/components/common/LocationPicker'
-import Button from '@/components/atoms/Button'
-import { calculateDistance, convertToStars } from '@/utils/geolocation'
-import { formatPrice, formatStarsPrice } from '@/utils/formatters'
-import { hapticFeedback } from '@/lib/telegram'
-
-const vehicleTypes = [
-  { id: 'economy', name: 'اقتصادي', icon: '🚗', baseFare: 10, perKm: 2 },
-  { id: 'comfort', name: 'مريح', icon: '🚙', baseFare: 15, perKm: 3 },
-  { id: 'business', name: 'أعمال', icon: '🚘', baseFare: 25, perKm: 5 }
-]
+import { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useAppStore } from '@/app/store';
+import LocationPicker from '@/components/common/LocationPicker';
+import Button from '@/components/atoms/Button';
+import { calculateDistance, convertToStars } from '@/utils/geolocation';
+import { formatPrice, formatStarsPrice } from '@/utils/formatters';
+import { VEHICLE_TYPES } from '@/utils/constants';
+import { hapticFeedback } from '@/lib/telegram';
 
 export default function RideRequest() {
-  const { pickupLocation, dropoffLocation, currentLocation, selectedVehicle, setPickup, setDropoff, setSelectedVehicle, setActiveRide } = useAppStore()
-  const [showPicker, setShowPicker] = useState(null)
-  const [pickupAddress, setPickupAddress] = useState('')
-  const [dropoffAddress, setDropoffAddress] = useState('')
-  const [estimatedPrice, setEstimatedPrice] = useState(null)
-  const [estimatedStars, setEstimatedStars] = useState(null)
-  const [paymentMethod, setPaymentMethod] = useState('cash')
-  const [distance, setDistance] = useState(null)
-  const [isSearching, setIsSearching] = useState(false)
-  const [surge, setSurge] = useState(1)
-  const [isScheduled, setIsScheduled] = useState(false)
-  const [scheduledDate, setScheduledDate] = useState('')
-  const [scheduledTime, setScheduledTime] = useState('')
+  const { pickupLocation, dropoffLocation, currentLocation, selectedVehicle, setPickup, setDropoff, setSelectedVehicle, setActiveRide, setNearbyDrivers } = useAppStore();
+  const [showPicker, setShowPicker] = useState(null);
+  const [pickupAddress, setPickupAddress] = useState('');
+  const [dropoffAddress, setDropoffAddress] = useState('');
+  const [estimatedPrice, setEstimatedPrice] = useState(null);
+  const [estimatedStars, setEstimatedStars] = useState(null);
+  const [paymentMethod, setPaymentMethod] = useState('cash');
+  const [distance, setDistance] = useState(null);
+  const [isSearching, setIsSearching] = useState(false);
+  const [surge, setSurge] = useState(1);
+  const [isScheduled, setIsScheduled] = useState(false);
+  const [scheduledDate, setScheduledDate] = useState('');
+  const [scheduledTime, setScheduledTime] = useState('');
 
   useEffect(() => {
     if (currentLocation && !pickupLocation) {
-      setPickup(currentLocation)
-      fetchAddress(currentLocation[0], currentLocation[1]).then(setPickupAddress)
+      setPickup(currentLocation);
+      fetchAddress(currentLocation[0], currentLocation[1]).then(setPickupAddress);
+      fetchNearbyDrivers();
     }
-  }, [currentLocation])
+  }, [currentLocation]);
 
   useEffect(() => {
     if (pickupLocation && dropoffLocation) {
-      const dist = calculateDistance(pickupLocation[0], pickupLocation[1], dropoffLocation[0], dropoffLocation[1])
-      setDistance(dist)
-      estimatePrice(dist)
+      const dist = calculateDistance(pickupLocation[0], pickupLocation[1], dropoffLocation[0], dropoffLocation[1]);
+      setDistance(dist);
+      estimatePrice(dist);
     }
-  }, [pickupLocation, dropoffLocation, selectedVehicle])
+  }, [pickupLocation, dropoffLocation, selectedVehicle]);
 
   const fetchAddress = async (lat, lng) => {
     try {
-      const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&accept-language=ar`)
-      const data = await res.json()
-      return data.display_name || 'موقع محدد'
-    } catch { return `${lat},${lng}` }
-  }
+      const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&accept-language=ar`);
+      const data = await res.json();
+      return data.display_name || 'موقع محدد';
+    } catch { return `${lat},${lng}`; }
+  };
+
+  const fetchNearbyDrivers = async () => {
+    if (!currentLocation) return;
+    const res = await fetch(`${import.meta.env.VITE_API_URL}/api/drivers/nearby?lat=${currentLocation[0]}&lng=${currentLocation[1]}`);
+    const data = await res.json();
+    setNearbyDrivers(data.drivers);
+  };
 
   const estimatePrice = async (dist) => {
     try {
@@ -57,30 +60,31 @@ export default function RideRequest() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ pickup_location: pickupLocation, dropoff_location: dropoffLocation, vehicle_type: selectedVehicle })
-      })
-      const data = await res.json()
-      setEstimatedPrice(data.final_price)
-      setEstimatedStars(data.stars_price)
-      setSurge(data.surge_multiplier || 1)
+      });
+      const data = await res.json();
+      setEstimatedPrice(data.final_price);
+      setEstimatedStars(data.stars_price);
+      setSurge(data.surge_multiplier || 1);
     } catch {
-      const base = 10 + dist * 2
-      setEstimatedPrice(Math.round(base))
-      setEstimatedStars(convertToStars(base))
+      const v = VEHICLE_TYPES.find(v => v.id === selectedVehicle);
+      const base = v.baseFare + dist * v.perKm;
+      setEstimatedPrice(Math.round(base));
+      setEstimatedStars(convertToStars(base));
     }
-  }
+  };
 
   const handleLocationSelected = (type, loc) => {
-    if (type === 'pickup') { setPickup(loc.coordinates); setPickupAddress(loc.address) }
-    else { setDropoff(loc.coordinates); setDropoffAddress(loc.address) }
-  }
+    if (type === 'pickup') { setPickup(loc.coordinates); setPickupAddress(loc.address); }
+    else { setDropoff(loc.coordinates); setDropoffAddress(loc.address); }
+  };
 
   const handleRequest = async () => {
-    if (!pickupLocation || !dropoffLocation) return
-    if (isScheduled && (!scheduledDate || !scheduledTime)) return alert('حدد وقت الجدولة')
-    hapticFeedback('medium')
-    setIsSearching(true)
+    if (!pickupLocation || !dropoffLocation) return;
+    if (isScheduled && (!scheduledDate || !scheduledTime)) return alert('حدد وقت الجدولة');
+    hapticFeedback('medium');
+    setIsSearching(true);
     try {
-      const endpoint = isScheduled ? '/api/rides/schedule' : '/api/rides/request'
+      const endpoint = isScheduled ? '/api/rides/schedule' : '/api/rides/request';
       const body = {
         customer_id: useAppStore.getState().user?.id,
         pickup_location: pickupLocation,
@@ -90,26 +94,26 @@ export default function RideRequest() {
         vehicle_type: selectedVehicle,
         estimated_price: estimatedPrice,
         payment_method: paymentMethod
-      }
-      if (isScheduled) body.scheduled_for = `${scheduledDate}T${scheduledTime}:00`
+      };
+      if (isScheduled) body.scheduled_for = `${scheduledDate}T${scheduledTime}:00`;
       const res = await fetch(`${import.meta.env.VITE_API_URL}${endpoint}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body)
-      })
-      const data = await res.json()
+      });
+      const data = await res.json();
       if (isScheduled) {
-        hapticFeedback('success')
-        alert(`✅ تم جدولة الرحلة بنجاح!\nالتاريخ: ${scheduledDate}\nالوقت: ${scheduledTime}`)
-        setIsSearching(false)
+        hapticFeedback('success');
+        alert(`✅ تم جدولة الرحلة بنجاح!\nالتاريخ: ${scheduledDate}\nالوقت: ${scheduledTime}`);
+        setIsSearching(false);
       } else if (paymentMethod === 'stars' && data.payment_required) {
-        setIsSearching(false)
+        setIsSearching(false);
       } else {
-        setActiveRide(data.ride)
+        setActiveRide(data.ride);
       }
-    } catch { alert('فشل الطلب') }
-    finally { setIsSearching(false) }
-  }
+    } catch { alert('فشل الطلب'); }
+    finally { setIsSearching(false); }
+  };
 
   if (isSearching) {
     return (
@@ -117,23 +121,19 @@ export default function RideRequest() {
         <div className="spinner" />
         <p>جاري البحث عن سائق...</p>
       </motion.div>
-    )
+    );
   }
 
   return (
     <motion.div
       initial={{ y: 100, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
-      transition={{ type: 'spring', damping: 20, stiffness: 100 }}
-      className="ride-request" style={{ overflowY: "auto", maxHeight: "calc(75dvh - 60px)", paddingBottom: "20px" }} style={{ overflowY: "auto", maxHeight: "calc(75dvh - 60px)", paddingBottom: "20px" }}
+      transition={{ type: 'spring', damping: 20 }}
+      style={{ padding: 20, overflowY: 'auto', maxHeight: '75dvh', paddingBottom: 20 }}
     >
-      <h3>🚗 اطلب توصيلة</h3>
+      <h3 style={{ marginBottom: 20 }}>🚗 اطلب توصيلة</h3>
 
-      <motion.div
-        whileTap={{ scale: 0.98 }}
-        className={`location-card ${pickupLocation ? 'selected' : ''}`}
-        onClick={() => setShowPicker('pickup')}
-      >
+      <motion.div whileTap={{ scale: 0.98 }} className={`location-card ${pickupLocation ? 'selected' : ''}`} onClick={() => setShowPicker('pickup')}>
         <span>📍</span>
         <div style={{ flex: 1 }}>
           <p style={{ fontWeight: 600, marginBottom: 4 }}>نقطة الانطلاق</p>
@@ -141,11 +141,7 @@ export default function RideRequest() {
         </div>
       </motion.div>
 
-      <motion.div
-        whileTap={{ scale: 0.98 }}
-        className={`location-card ${dropoffLocation ? 'selected' : ''}`}
-        onClick={() => setShowPicker('dropoff')}
-      >
+      <motion.div whileTap={{ scale: 0.98 }} className={`location-card ${dropoffLocation ? 'selected' : ''}`} onClick={() => setShowPicker('dropoff')}>
         <span>🎯</span>
         <div style={{ flex: 1 }}>
           <p style={{ fontWeight: 600, marginBottom: 4 }}>الوجهة</p>
@@ -155,13 +151,18 @@ export default function RideRequest() {
 
       <div style={{ margin: '20px 0' }}>
         <p style={{ fontWeight: 600, marginBottom: 12 }}>نوع المركبة</p>
-        <div className="vehicle-grid">
-          {vehicleTypes.map(v => (
+        <div className="vehicle-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 8 }}>
+          {VEHICLE_TYPES.map(v => (
             <motion.div
               key={v.id}
               whileTap={{ scale: 0.95 }}
               className={`vehicle-card ${selectedVehicle === v.id ? 'active' : ''}`}
               onClick={() => setSelectedVehicle(v.id)}
+              style={{
+                padding: 12, borderRadius: 12, textAlign: 'center', cursor: 'pointer',
+                background: selectedVehicle === v.id ? 'rgba(0,122,255,0.1)' : 'var(--color-gray-light)',
+                border: selectedVehicle === v.id ? '2px solid var(--color-primary)' : '1px solid transparent'
+              }}
             >
               <div style={{ fontSize: 28, marginBottom: 4 }}>{v.icon}</div>
               <p style={{ fontWeight: 500 }}>{v.name}</p>
@@ -171,9 +172,9 @@ export default function RideRequest() {
         </div>
       </div>
 
-      <div className="payment-toggle">
-        <button className={paymentMethod === 'cash' ? 'active' : ''} onClick={() => setPaymentMethod('cash')}>💵 نقدي</button>
-        <button className={paymentMethod === 'stars' ? 'active' : ''} onClick={() => setPaymentMethod('stars')}>⭐ نجوم</button>
+      <div className="payment-toggle" style={{ display: 'flex', gap: 12, marginBottom: 20 }}>
+        <button className={paymentMethod === 'cash' ? 'active' : ''} onClick={() => setPaymentMethod('cash')} style={{ flex: 1, padding: 12, borderRadius: 12, border: paymentMethod === 'cash' ? '2px solid var(--color-primary)' : '1px solid #ccc', background: 'none' }}>💵 نقدي</button>
+        <button className={paymentMethod === 'stars' ? 'active' : ''} onClick={() => setPaymentMethod('stars')} style={{ flex: 1, padding: 12, borderRadius: 12, border: paymentMethod === 'stars' ? '2px solid var(--color-primary)' : '1px solid #ccc', background: 'none' }}>⭐ نجوم</button>
       </div>
 
       <label style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
@@ -182,19 +183,14 @@ export default function RideRequest() {
       </label>
       {isScheduled && (
         <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} style={{ display: 'flex', gap: 12, marginBottom: 20 }}>
-          <input type="date" value={scheduledDate} onChange={e => setScheduledDate(e.target.value)} min={new Date().toISOString().split('T')[0]} />
-          <input type="time" value={scheduledTime} onChange={e => setScheduledTime(e.target.value)} />
+          <input type="date" value={scheduledDate} onChange={e => setScheduledDate(e.target.value)} min={new Date().toISOString().split('T')[0]} style={{ flex: 1 }} />
+          <input type="time" value={scheduledTime} onChange={e => setScheduledTime(e.target.value)} style={{ flex: 1 }} />
         </motion.div>
       )}
 
       <AnimatePresence>
         {estimatedPrice && distance && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            className="price-card"
-          >
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="price-card">
             <div className="price-row"><span>المسافة</span><span>{distance.toFixed(1)} كم</span></div>
             {surge > 1 && <div className="price-row" style={{ color: 'var(--color-warning)' }}><span>⚡ تسعير الذروة</span><span>{surge}x</span></div>}
             <div className="price-total">{paymentMethod === 'stars' ? formatStarsPrice(estimatedStars) : formatPrice(estimatedPrice)}</div>
@@ -202,11 +198,7 @@ export default function RideRequest() {
         )}
       </AnimatePresence>
 
-      <Button
-        variant="primary"
-        onClick={handleRequest}
-        disabled={!pickupLocation || !dropoffLocation}
-      >
+      <Button variant="primary" onClick={handleRequest} disabled={!pickupLocation || !dropoffLocation}>
         {isScheduled ? '📅 جدولة الرحلة' : paymentMethod === 'stars' ? `⭐ ادفع ${estimatedStars} نجمة` : '🔍 ابحث عن سائق'}
       </Button>
 
@@ -220,5 +212,5 @@ export default function RideRequest() {
         />
       )}
     </motion.div>
-  )
+  );
 }
