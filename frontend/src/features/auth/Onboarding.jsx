@@ -39,13 +39,20 @@ export default function Onboarding({ isAdmin, onOpenAdmin }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ telegram_id: telegramId, chat_id: chatId, full_name: fullName, phone: cleanPhone, role })
       });
-      if (!res.ok) throw new Error(await res.text());
       const data = await res.json();
+      
+      if (!res.ok) {
+        if (res.status === 409 || data.error === 'phone_already_exists') {
+          throw new Error('رقم الهاتف مسجل مسبقاً. إذا كان هذا رقمك، يرجى التواصل مع الدعم.');
+        }
+        throw new Error(data.message || 'فشل في حفظ البيانات');
+      }
+      
       setUser(data.user);
       if (role === 'driver') setStep(3);
     } catch (err) {
       setError(err.message);
-      showAlert('حدث خطأ أثناء الحفظ');
+      showAlert(err.message);
     } finally {
       setIsSubmitting(false);
     }
@@ -62,22 +69,47 @@ export default function Onboarding({ isAdmin, onOpenAdmin }) {
   };
 
   const handleDriverRegistration = async () => {
-    if (!vehicleInfo.model || !vehicleInfo.plate || !licensePhoto || !vehiclePhoto) return setError('جميع الحقول مطلوبة');
+    if (!vehicleInfo.model || !vehicleInfo.plate || !licensePhoto || !vehiclePhoto) {
+      return setError('جميع الحقول مطلوبة');
+    }
     setIsSubmitting(true);
     setError('');
+    
     try {
-      const licenseUrl = await uploadPhoto(licensePhoto, 'driver-docs', `licenses/${user.id}`);
-      const vehicleUrl = await uploadPhoto(vehiclePhoto, 'driver-docs', `vehicles/${user.id}`);
+      // رفع الصور
+      let licenseUrl, vehicleUrl;
+      try {
+        licenseUrl = await uploadPhoto(licensePhoto, 'driver-docs', `licenses/${user.id}`);
+        vehicleUrl = await uploadPhoto(vehiclePhoto, 'driver-docs', `vehicles/${user.id}`);
+      } catch (uploadError) {
+        console.error('Upload error:', uploadError);
+        throw new Error('فشل رفع الصور. تأكد من اتصالك وحجم الملف.');
+      }
+      
       const res = await fetch(`${import.meta.env.VITE_API_URL}/api/drivers/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ user_id: user.id, ...vehicleInfo, license_photo_url: licenseUrl, vehicle_photo_url: vehicleUrl })
       });
-      if (!res.ok) throw new Error(await res.text());
+      
       const data = await res.json();
+      
+      if (!res.ok) {
+        if (res.status === 409) {
+          throw new Error('لديك حساب سائق بالفعل.');
+        } else if (res.status === 400) {
+          throw new Error(data.message || 'بيانات التسجيل غير صالحة.');
+        } else if (res.status === 404) {
+          throw new Error('المستخدم غير موجود. سجل الدخول مجدداً.');
+        } else {
+          throw new Error(data.message || 'فشل إكمال التسجيل.');
+        }
+      }
+      
       setUser({ ...user, driver_id: data.driver.id, role: 'driver' });
     } catch (err) {
       setError(err.message);
+      showAlert(err.message);
     } finally {
       setIsSubmitting(false);
     }
