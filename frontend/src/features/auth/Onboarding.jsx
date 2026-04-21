@@ -59,11 +59,18 @@ export default function Onboarding({ isAdmin, onOpenAdmin }) {
   };
 
   const uploadPhoto = async (file, bucket, path) => {
+    if (!file) throw new Error('الملف غير موجود');
     const ext = file.name.split('.').pop();
     const fileName = `${Date.now()}.${ext}`;
     const filePath = `${path}/${fileName}`;
+    
+    console.log(`رفع الصورة إلى: ${bucket}/${filePath}`);
+    
     const { error } = await supabase.storage.from(bucket).upload(filePath, file);
-    if (error) throw error;
+    if (error) {
+      console.error('خطأ في رفع الصورة:', error);
+      throw new Error(`فشل رفع الصورة: ${error.message}`);
+    }
     const { data } = supabase.storage.from(bucket).getPublicUrl(filePath);
     return data.publicUrl;
   };
@@ -76,40 +83,58 @@ export default function Onboarding({ isAdmin, onOpenAdmin }) {
     setError('');
     
     try {
-      // رفع الصور
+      // 1. رفع الصور
       let licenseUrl, vehicleUrl;
       try {
         licenseUrl = await uploadPhoto(licensePhoto, 'driver-docs', `licenses/${user.id}`);
         vehicleUrl = await uploadPhoto(vehiclePhoto, 'driver-docs', `vehicles/${user.id}`);
       } catch (uploadError) {
-        console.error('Upload error:', uploadError);
-        throw new Error('فشل رفع الصور. تأكد من اتصالك وحجم الملف.');
+        console.error('فشل رفع الصور:', uploadError);
+        throw new Error(uploadError.message || 'فشل رفع الصور. تأكد من اتصالك وحجم الملف.');
       }
       
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/drivers/register`, {
+      // 2. إرسال بيانات السائق إلى الخادم
+      const apiUrl = `${import.meta.env.VITE_API_URL}/api/drivers/register`;
+      console.log('جارٍ إرسال الطلب إلى:', apiUrl);
+      
+      const res = await fetch(apiUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ user_id: user.id, ...vehicleInfo, license_photo_url: licenseUrl, vehicle_photo_url: vehicleUrl })
+        body: JSON.stringify({ 
+          user_id: user.id, 
+          ...vehicleInfo, 
+          license_photo_url: licenseUrl, 
+          vehicle_photo_url: vehicleUrl 
+        })
       });
       
-      const data = await res.json();
-      
+      // 3. معالجة الاستجابة
       if (!res.ok) {
-        if (res.status === 409) {
-          throw new Error('لديك حساب سائق بالفعل.');
-        } else if (res.status === 400) {
-          throw new Error(data.message || 'بيانات التسجيل غير صالحة.');
-        } else if (res.status === 404) {
-          throw new Error('المستخدم غير موجود. سجل الدخول مجدداً.');
-        } else {
-          throw new Error(data.message || 'فشل إكمال التسجيل.');
+        let errorMessage = 'فشل إكمال التسجيل';
+        try {
+          const data = await res.json();
+          errorMessage = data.message || errorMessage;
+        } catch (e) {
+          // إذا كانت الاستجابة ليست JSON
+          const text = await res.text();
+          console.error('استجابة غير JSON:', text);
         }
+        throw new Error(errorMessage);
       }
       
+      const data = await res.json();
       setUser({ ...user, driver_id: data.driver.id, role: 'driver' });
     } catch (err) {
-      setError(err.message);
-      showAlert(err.message);
+      console.error('خطأ في تسجيل السائق:', err);
+      
+      // تشخيص إضافي: هل الخطأ من الشبكة أم من الخادم؟
+      if (err.message === 'Failed to fetch' || err.name === 'TypeError') {
+        setError('فشل الاتصال بالخادم. تأكد من اتصالك بالإنترنت أو أن الخادم يعمل.');
+        showAlert('تعذر الاتصال بالخادم. يرجى التحقق من اتصالك بالإنترنت والمحاولة مرة أخرى.');
+      } else {
+        setError(err.message);
+        showAlert(err.message);
+      }
     } finally {
       setIsSubmitting(false);
     }
