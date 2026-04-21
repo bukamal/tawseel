@@ -1,51 +1,105 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet'
+import { MapContainer, TileLayer, Marker, useMapEvents, useMap } from 'react-leaflet'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import Button from '@/components/atoms/Button'
+import Input from '@/components/atoms/Input'
 import { hapticFeedback } from '@/lib/telegram'
+import { MAP_CONFIG } from '@/utils/constants'
 
-const pickupIcon = new L.Icon({ iconUrl: '/assets/pickup-marker.svg', iconSize: [35, 45], iconAnchor: [17, 45] })
-const dropoffIcon = new L.Icon({ iconUrl: '/assets/dropoff-marker.svg', iconSize: [35, 45], iconAnchor: [17, 45] })
+// أيقونات مخصصة
+const pickupIcon = new L.Icon({
+  iconUrl: '/assets/pickup-marker.svg',
+  iconSize: [40, 40],
+  iconAnchor: [20, 40]
+})
+const dropoffIcon = new L.Icon({
+  iconUrl: '/assets/dropoff-marker.svg',
+  iconSize: [40, 40],
+  iconAnchor: [20, 40]
+})
 
-const AddressSearch = ({ onSelect, placeholder }) => {
+// مكون البحث عن العناوين
+function AddressSearch({ onSelect, placeholder }) {
   const [query, setQuery] = useState('')
   const [results, setResults] = useState([])
   const [searching, setSearching] = useState(false)
+  const timeoutRef = useRef(null)
 
-  const search = async (q) => {
-    if (q.length < 3) return setResults([])
+  const handleSearch = (value) => {
+    setQuery(value)
+    if (timeoutRef.current) clearTimeout(timeoutRef.current)
+    if (value.length < 3) {
+      setResults([])
+      return
+    }
+    timeoutRef.current = setTimeout(() => performSearch(value), 500)
+  }
+
+  const performSearch = async (q) => {
     setSearching(true)
     try {
-      const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&addressdetails=1&limit=5&countrycodes=sy&accept-language=ar`)
-      setResults(await res.json())
-    } finally { setSearching(false) }
+      const res = await fetch(
+        `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&addressdetails=1&limit=5&countrycodes=sy&accept-language=ar`
+      )
+      const data = await res.json()
+      setResults(data)
+    } catch (e) {
+      console.error('Search failed:', e)
+      setResults([])
+    } finally {
+      setSearching(false)
+    }
+  }
+
+  const handleSelect = (result) => {
+    onSelect({
+      lat: parseFloat(result.lat),
+      lng: parseFloat(result.lon),
+      address: result.display_name
+    })
+    setQuery('')
+    setResults([])
   }
 
   return (
-    <div style={{ position: 'relative' }}>
-      <input
-        type="text"
-        value={query}
-        onChange={e => { setQuery(e.target.value); search(e.target.value) }}
+    <div className="relative">
+      <Input
+        icon="🔍"
         placeholder={placeholder}
+        value={query}
+        onChange={(e) => handleSearch(e.target.value)}
       />
       <AnimatePresence>
         {searching && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ position: 'absolute', top: '100%', background: 'white', padding: 12, borderRadius: 12, boxShadow: '0 4px 12px rgba(0,0,0,0.1)', zIndex: 1000 }}>
-            جاري البحث...
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute top-full left-0 right-0 bg-surface border border-border rounded-lg p-4 mt-1 z-10 shadow-lg"
+          >
+            <div className="flex items-center gap-2">
+              <div className="spinner w-4 h-4" />
+              <span>جاري البحث...</span>
+            </div>
           </motion.div>
         )}
         {results.length > 0 && (
-          <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} style={{ position: 'absolute', top: '100%', background: 'white', borderRadius: 12, boxShadow: '0 4px 12px rgba(0,0,0,0.1)', zIndex: 1000, maxHeight: 300, overflowY: 'auto' }}>
-            {results.map((r, i) => (
+          <motion.div
+            initial={{ opacity: 0, y: -5 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -5 }}
+            className="absolute top-full left-0 right-0 bg-surface border border-border rounded-lg mt-1 z-10 shadow-lg max-h-72 overflow-y-auto"
+          >
+            {results.map((result, index) => (
               <div
-                key={i}
-                onClick={() => { onSelect({ lat: parseFloat(r.lat), lng: parseFloat(r.lon), address: r.display_name }); setQuery(''); setResults([]) }}
-                style={{ padding: 12, borderBottom: '1px solid #F0F0F0', cursor: 'pointer' }}
+                key={index}
+                onClick={() => handleSelect(result)}
+                className="p-3 hover:bg-background cursor-pointer border-b border-border last:border-0"
               >
-                <span>📍</span> {r.display_name}
+                <span className="mr-2">📍</span>
+                {result.display_name}
               </div>
             ))}
           </motion.div>
@@ -55,19 +109,66 @@ const AddressSearch = ({ onSelect, placeholder }) => {
   )
 }
 
-const MapController = ({ onSelect }) => {
-  useMapEvents({
+// مكون التحكم في الخريطة (السحب والتحديد)
+function MapController({ onSelect, markerPosition, setMarkerPosition }) {
+  const map = useMapEvents({
     click(e) {
-      onSelect({ lat: e.latlng.lat, lng: e.latlng.lng, address: `${e.latlng.lat},${e.latlng.lng}` })
+      const { lat, lng } = e.latlng
+      setMarkerPosition({ lat, lng })
+      onSelect({ lat, lng, address: `${lat.toFixed(6)}, ${lng.toFixed(6)}` })
     }
   })
+
+  useEffect(() => {
+    if (markerPosition) {
+      map.setView([markerPosition.lat, markerPosition.lng], map.getZoom())
+    }
+  }, [markerPosition, map])
+
   return null
 }
 
 export default function LocationPicker({ type, initialLocation, onSelect, onClose, currentLocation }) {
-  const [temp, setTemp] = useState(initialLocation)
-  const center = temp ? [temp.lat, temp.lng] : (currentLocation || [33.5138, 36.2765])
+  const [markerPosition, setMarkerPosition] = useState(initialLocation)
+  const [address, setAddress] = useState(initialLocation?.address || '')
+  const [isLoadingAddress, setIsLoadingAddress] = useState(false)
+
+  const center = markerPosition
+    ? [markerPosition.lat, markerPosition.lng]
+    : currentLocation || MAP_CONFIG.defaultCenter
+
   const icon = type === 'pickup' ? pickupIcon : dropoffIcon
+  const title = type === 'pickup' ? 'حدد نقطة الانطلاق' : 'حدد الوجهة'
+
+  const handleLocationSelect = async (loc) => {
+    setMarkerPosition({ lat: loc.lat, lng: loc.lng })
+    if (loc.address) {
+      setAddress(loc.address)
+    } else {
+      setIsLoadingAddress(true)
+      try {
+        const res = await fetch(
+          `https://nominatim.openstreetmap.org/reverse?lat=${loc.lat}&lon=${loc.lng}&format=json&accept-language=ar`
+        )
+        const data = await res.json()
+        setAddress(data.display_name || `${loc.lat}, ${loc.lng}`)
+      } catch {
+        setAddress(`${loc.lat}, ${loc.lng}`)
+      } finally {
+        setIsLoadingAddress(false)
+      }
+    }
+  }
+
+  const handleConfirm = () => {
+    if (!markerPosition) return
+    hapticFeedback('medium')
+    onSelect({
+      coordinates: [markerPosition.lat, markerPosition.lng],
+      address: address || `${markerPosition.lat}, ${markerPosition.lng}`
+    })
+    onClose()
+  }
 
   return (
     <AnimatePresence>
@@ -75,51 +176,66 @@ export default function LocationPicker({ type, initialLocation, onSelect, onClos
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'white', zIndex: 2000, display: 'flex', flexDirection: 'column' }}
+        className="fixed inset-0 z-50 bg-background flex flex-col"
       >
-        <motion.div initial={{ y: -50 }} animate={{ y: 0 }} style={{ padding: 16, borderBottom: '1px solid #eee', display: 'flex', alignItems: 'center', gap: 12 }}>
-          <Button variant="outline" size="sm" onClick={onClose} style={{ width: 'auto' }}>←</Button>
-          <h3>{type === 'pickup' ? 'حدد نقطة الانطلاق' : 'حدد الوجهة'}</h3>
-        </motion.div>
-        <div style={{ padding: 16 }}>
-          <AddressSearch onSelect={setTemp} placeholder={type === 'pickup' ? 'ابحث عن نقطة الانطلاق...' : 'ابحث عن الوجهة...'} />
+        <div className="p-4 border-b border-border flex items-center gap-3">
+          <Button variant="ghost" size="icon" onClick={onClose} className="!w-auto">
+            ←
+          </Button>
+          <h3 className="text-lg font-semibold">{title}</h3>
         </div>
-        <div style={{ flex: 1 }}>
-          <MapContainer center={center} zoom={15} style={{ height: '100%' }}>
-            <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-            <MapController onSelect={setTemp} />
-            {temp && (
+
+        <div className="p-4">
+          <AddressSearch
+            onSelect={handleLocationSelect}
+            placeholder={type === 'pickup' ? 'ابحث عن نقطة الانطلاق...' : 'ابحث عن الوجهة...'}
+          />
+        </div>
+
+        <div className="flex-1">
+          <MapContainer center={center} zoom={15} style={{ height: '100%', width: '100%' }}>
+            <TileLayer
+              attribution='&copy; OpenStreetMap'
+              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            />
+            <MapController
+              onSelect={handleLocationSelect}
+              markerPosition={markerPosition}
+              setMarkerPosition={setMarkerPosition}
+            />
+            {markerPosition && (
               <Marker
-                position={[temp.lat, temp.lng]}
+                position={[markerPosition.lat, markerPosition.lng]}
                 icon={icon}
                 draggable
                 eventHandlers={{
-                  dragend(e) {
-                    const pos = e.target.getLatLng()
-                    setTemp({ lat: pos.lat, lng: pos.lng, address: `${pos.lat},${pos.lng}` })
+                  dragend: async (e) => {
+                    const { lat, lng } = e.target.getLatLng()
+                    handleLocationSelect({ lat, lng })
                   }
                 }}
               />
             )}
           </MapContainer>
         </div>
+
         <AnimatePresence>
-          {temp && (
+          {markerPosition && (
             <motion.div
-              initial={{ y: 100 }}
+              initial={{ y: '100%' }}
               animate={{ y: 0 }}
-              exit={{ y: 100 }}
-              style={{ padding: 16, background: '#F8F9FA', borderTop: '1px solid #eee' }}
+              exit={{ y: '100%' }}
+              transition={{ type: 'spring', damping: 25 }}
+              className="bg-surface border-t border-border p-4 space-y-3"
+              style={{ paddingBottom: 'max(16px, env(safe-area-inset-bottom))' }}
             >
-              <p>{temp.address}</p>
-              <Button
-                variant="primary"
-                onClick={() => {
-                  hapticFeedback('medium')
-                  onSelect({ coordinates: [temp.lat, temp.lng], address: temp.address })
-                  onClose()
-                }}
-              >
+              <div className="flex items-start gap-3">
+                <span className="text-xl">{type === 'pickup' ? '📍' : '🎯'}</span>
+                <p className="flex-1 text-text-secondary">
+                  {isLoadingAddress ? 'جاري تحميل العنوان...' : address}
+                </p>
+              </div>
+              <Button variant="primary" size="lg" onClick={handleConfirm}>
                 ✅ تأكيد الموقع
               </Button>
             </motion.div>

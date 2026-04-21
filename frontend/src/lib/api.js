@@ -77,6 +77,11 @@ export const api = {
       method: 'PATCH',
       headers: headers(),
       body: JSON.stringify({ notification_id: notificationId })
+    }),
+    markAllAsRead: () => fetch(`${API_URL}/api/notifications`, {
+      method: 'PATCH',
+      headers: headers(),
+      body: JSON.stringify({ mark_as_read: 'all' })
     })
   },
   admin: {

@@ -44,37 +44,51 @@ export default function ActiveRide() {
 
   return (
     <>
-      <motion.div initial={{ y: 100, opacity: 0 }} animate={{ y: 0, opacity: 1 }} style={{ padding: 20, overflowY: 'auto', maxHeight: '75dvh' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-          <h3>{getStatusText(activeRide.status)}</h3>
-          <span style={{ background: 'var(--color-gray-light)', padding: '6px 16px', borderRadius: 30, fontWeight: 600 }}>
+      <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="space-y-4">
+        <div className="flex justify-between items-center">
+          <h3 className="text-xl font-bold">{getStatusText(activeRide.status)}</h3>
+          <span className="bg-background px-4 py-1.5 rounded-full font-mono font-semibold">
             {Math.floor(elapsed / 60)}:{String(elapsed % 60).padStart(2, '0')}
           </span>
         </div>
+
         {activeRide.driver && (
-          <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="card" style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-            <div style={{ width: 50, height: 50, borderRadius: 25, background: 'var(--color-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: 24 }}>👤</div>
-            <div style={{ flex: 1 }}>
-              <p style={{ fontWeight: 700 }}>{activeRide.driver.user?.full_name}</p>
-              <p style={{ color: 'var(--color-gray)', fontSize: 14 }}>{activeRide.driver.vehicle_model} ({activeRide.driver.plate_number})</p>
-              <p style={{ color: 'var(--color-gray)', fontSize: 14 }}>⭐ {activeRide.driver.rating}</p>
+          <motion.div initial={{ scale: 0.95 }} animate={{ scale: 1 }} className="card flex items-center gap-4">
+            <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center text-2xl">👤</div>
+            <div className="flex-1">
+              <p className="font-bold">{activeRide.driver.user?.full_name}</p>
+              <p className="text-text-secondary text-sm">{activeRide.driver.vehicle_model} ({activeRide.driver.plate_number})</p>
+              <p className="text-yellow-500 text-sm">⭐ {activeRide.driver.rating?.toFixed(1) || '5.0'}</p>
             </div>
-            <a href={`tel:${activeRide.driver.user?.phone}`} style={{ background: 'var(--color-success)', padding: '10px 16px', borderRadius: 30, color: 'white', textDecoration: 'none' }}>📞</a>
+            <a href={`tel:${activeRide.driver.user?.phone}`} className="bg-success text-white p-3 rounded-full">📞</a>
           </motion.div>
         )}
-        <div style={{ marginTop: 20 }}>
+
+        <div className="space-y-2">
           <div className="location-card"><span>📍</span> {activeRide.pickup_address}</div>
           <div className="location-card"><span>🎯</span> {activeRide.dropoff_address}</div>
         </div>
-        <div className="price-card" style={{ marginTop: 20 }}>
-          <div className="price-total">{activeRide.payment_method === 'stars' ? formatStarsPrice(activeRide.stars_price) : formatPrice(activeRide.price)}</div>
+
+        <div className="price-card">
+          <div className="price-total">
+            {activeRide.payment_method === 'stars' ? formatStarsPrice(activeRide.stars_price) : formatPrice(activeRide.price)}
+          </div>
         </div>
+
         {['pending', 'searching', 'accepted'].includes(activeRide.status) && (
           <Button variant="danger" onClick={handleCancel}>إلغاء الرحلة</Button>
         )}
       </motion.div>
+
       {showRating && targetUserId && (
-        <RatingModal ride={activeRide} userId={user?.id} targetUserId={targetUserId} targetType={targetType} onClose={() => { setShowRating(false); resetRide() }} onSuccess={() => { setShowRating(false); resetRide() }} />
+        <RatingModal
+          ride={activeRide}
+          userId={user?.id}
+          targetUserId={targetUserId}
+          targetType={targetType}
+          onClose={() => { setShowRating(false); resetRide() }}
+          onSuccess={() => { setShowRating(false); resetRide() }}
+        />
       )}
     </>
   )
