@@ -41,7 +41,12 @@ function App() {
     if (data.user) {
       setUser(data.user);
       const adminIds = (import.meta.env.VITE_ADMIN_TELEGRAM_IDS || '').split(',');
-      setIsAdmin(data.user.role === 'admin' || adminIds.includes(String(telegramId)));
+      const admin = data.user.role === 'admin' || adminIds.includes(String(telegramId));
+      setIsAdmin(admin);
+      // ✅ توجيه المشرف تلقائياً إلى لوحة التحكم
+      if (admin) {
+        setShowAdmin(true);
+      }
     }
   };
 
@@ -66,11 +71,13 @@ function App() {
     return <div style={{ color: 'white', padding: 20 }}>خطأ: {appError}</div>;
   }
 
-  if (isOnboarding) return <Onboarding />;
-
+  // ✅ عرض لوحة التحكم تلقائياً للمشرف
   if (showAdmin && isAdmin) {
     return <AdminDashboard onClose={() => setShowAdmin(false)} />;
   }
+
+  // إذا لم يكن المشرف في وضع اللوحة، نعرض التدفق الطبيعي
+  if (isOnboarding) return <Onboarding isAdmin={isAdmin} onOpenAdmin={() => setShowAdmin(true)} />;
 
   return (
     <div className="app">
