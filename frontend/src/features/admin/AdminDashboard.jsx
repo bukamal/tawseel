@@ -6,7 +6,6 @@ import Button from '@/components/atoms/Button';
 import { formatPrice, formatStarsPrice } from '@/utils/formatters';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
-// مكون لعرض الصورة في نافذة منبثقة
 const ImageModal = ({ url, onClose }) => {
   return (
     <motion.div
@@ -63,40 +62,25 @@ export default function AdminDashboard({ onClose }) {
     fetchPending();
   };
 
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: { opacity: 1, transition: { staggerChildren: 0.05 } }
-  };
-
-  const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: { opacity: 1, y: 0, transition: { type: 'spring', damping: 15 } }
-  };
-
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="admin-dashboard" style={{ padding: 20, maxWidth: 1200, margin: '0 auto' }}>
-      <Button variant="primary" size="sm" onClick={onClose} style={{ width: 'auto', marginBottom: 20 }}>
-        ← العودة للتطبيق
-      </Button>
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ padding: 20, maxWidth: 1200, margin: '0 auto' }}>
+      <Button variant="primary" size="sm" onClick={onClose} style={{ width: 'auto', marginBottom: 20 }}>← العودة للتطبيق</Button>
+      <h1 style={{ marginBottom: 20 }}>📊 لوحة التحكم</h1>
 
-      <motion.h1 initial={{ x: -20, opacity: 0 }} animate={{ x: 0, opacity: 1 }} transition={{ delay: 0.1 }} style={{ marginBottom: 20 }}>
-        📊 لوحة التحكم
-      </motion.h1>
-
-      <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.15 }} style={{ display: 'flex', gap: 12, marginBottom: 20 }}>
+      <div style={{ display: 'flex', gap: 12, marginBottom: 20 }}>
         <div><label>من</label><input type="date" value={dateRange.from} onChange={e => setDateRange({...dateRange, from: e.target.value})} /></div>
         <div><label>إلى</label><input type="date" value={dateRange.to} onChange={e => setDateRange({...dateRange, to: e.target.value})} /></div>
         <Button size="sm" onClick={fetchStats}>تحديث</Button>
-      </motion.div>
+      </div>
 
-      <motion.div variants={containerVariants} initial="hidden" animate="visible" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px,1fr))', gap: 16, marginBottom: 30 }}>
-        <motion.div variants={itemVariants} className="card"><h3>{stats.total_rides}</h3><p>إجمالي الرحلات</p></motion.div>
-        <motion.div variants={itemVariants} className="card"><h3>{stats.completed_rides}</h3><p>مكتملة</p></motion.div>
-        <motion.div variants={itemVariants} className="card"><h3>{formatPrice(stats.total_revenue)}</h3><p>نقدي</p></motion.div>
-        <motion.div variants={itemVariants} className="card"><h3>{formatStarsPrice(stats.total_stars_revenue)}</h3><p>نجوم</p></motion.div>
-        <motion.div variants={itemVariants} className="card"><h3>{stats.active_drivers}</h3><p>سائقين نشطين</p></motion.div>
-        <motion.div variants={itemVariants} className="card"><h3>{stats.avg_rating?.toFixed(1)}/5</h3><p>متوسط التقييم</p></motion.div>
-      </motion.div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px,1fr))', gap: 16, marginBottom: 30 }}>
+        <div className="card"><h3>{stats.total_rides}</h3><p>إجمالي الرحلات</p></div>
+        <div className="card"><h3>{stats.completed_rides}</h3><p>مكتملة</p></div>
+        <div className="card"><h3>{formatPrice(stats.total_revenue)}</h3><p>نقدي</p></div>
+        <div className="card"><h3>{formatStarsPrice(stats.total_stars_revenue)}</h3><p>نجوم</p></div>
+        <div className="card"><h3>{stats.active_drivers}</h3><p>سائقين نشطين</p></div>
+        <div className="card"><h3>{stats.avg_rating?.toFixed(1)}/5</h3><p>متوسط التقييم</p></div>
+      </div>
 
       <div style={{ display: 'flex', gap: 10, marginBottom: 20 }}>
         <button onClick={() => setActiveTab('overview')} className={activeTab==='overview'?'active':''} style={{ padding: '10px 20px', background: 'none', border: 'none', borderBottom: activeTab==='overview'?'2px solid var(--color-primary)':'none' }}>نظرة عامة</button>
@@ -105,15 +89,8 @@ export default function AdminDashboard({ onClose }) {
       </div>
 
       <AnimatePresence mode="wait">
-        {activeTab === 'overview' && (
-          <motion.div key="overview" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}>
-            <h3>نظرة عامة</h3>
-            <p>ملخص أداء المنصة خلال الفترة المحددة.</p>
-          </motion.div>
-        )}
-
         {activeTab === 'revenue' && revenue.length > 0 && (
-          <motion.div key="revenue" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}>
+          <motion.div key="revenue" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
             <h3>الإيرادات اليومية</h3>
             <ResponsiveContainer width="100%" height={300}>
               <BarChart data={revenue}>
@@ -127,32 +104,21 @@ export default function AdminDashboard({ onClose }) {
             </ResponsiveContainer>
           </motion.div>
         )}
-
         {activeTab === 'pending' && (
-          <motion.div key="pending" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}>
+          <motion.div key="pending" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
             <h3>طلبات التسجيل كسائق</h3>
-            {loading ? <div className="spinner" /> : pending.length === 0 ? <p style={{ textAlign: 'center', padding: 40 }}>لا توجد طلبات معلقة</p> : (
+            {loading ? <div className="spinner" /> : pending.length === 0 ? <p>لا توجد طلبات معلقة</p> : (
               <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <thead><tr><th>الاسم</th><th>الهاتف</th><th>المركبة</th><th>المستندات</th><th>إجراء</th></tr></thead>
                 <tbody>
-                  {pending.map((d, index) => (
-                    <motion.tr key={d.id} initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: index * 0.05 }} style={{ borderBottom: '1px solid #eee' }}>
-                      <td>{d.user?.full_name}</td>
-                      <td>{d.user?.phone}</td>
-                      <td>{d.vehicle_model} ({d.plate_number})</td>
+                  {pending.map(d => (
+                    <tr key={d.id}><td>{d.user?.full_name}</td><td>{d.user?.phone}</td><td>{d.vehicle_model} ({d.plate_number})</td>
                       <td>
-                        {d.license_photo_url && (
-                          <button onClick={() => setSelectedImage(d.license_photo_url)} style={{ marginRight: 8, background: 'none', border: 'none', cursor: 'pointer', fontSize: 18 }} title="عرض الرخصة">🪪</button>
-                        )}
-                        {d.vehicle_photo_url && (
-                          <button onClick={() => setSelectedImage(d.vehicle_photo_url)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 18 }} title="عرض المركبة">🚗</button>
-                        )}
+                        {d.license_photo_url && <button onClick={() => setSelectedImage(d.license_photo_url)} style={{ marginRight: 8, background: 'none', border: 'none', cursor: 'pointer', fontSize: 18 }}>🪪</button>}
+                        {d.vehicle_photo_url && <button onClick={() => setSelectedImage(d.vehicle_photo_url)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 18 }}>🚗</button>}
                       </td>
-                      <td>
-                        <Button size="sm" variant="success" onClick={() => handleVerify(d.id, true)} style={{ marginRight: 8 }}>✅ قبول</Button>
-                        <Button size="sm" variant="danger" onClick={() => handleVerify(d.id, false)}>❌ رفض</Button>
-                      </td>
-                    </motion.tr>
+                      <td><Button size="sm" variant="success" onClick={()=>handleVerify(d.id,true)}>✅</Button> <Button size="sm" variant="danger" onClick={()=>handleVerify(d.id,false)}>❌</Button></td>
+                    </tr>
                   ))}
                 </tbody>
               </table>
@@ -160,7 +126,6 @@ export default function AdminDashboard({ onClose }) {
           </motion.div>
         )}
       </AnimatePresence>
-
       <AnimatePresence>
         {selectedImage && <ImageModal url={selectedImage} onClose={() => setSelectedImage(null)} />}
       </AnimatePresence>

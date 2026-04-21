@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAppStore } from '@/app/store';
-import { supabase } from '@/lib/supabase';
 import Button from '@/components/atoms/Button';
 import { hapticFeedback, showAlert } from '@/lib/telegram';
 
@@ -58,21 +57,13 @@ export default function Onboarding({ isAdmin, onOpenAdmin }) {
     }
   };
 
-  const uploadPhoto = async (file, bucket, path) => {
-    if (!file) throw new Error('الملف غير موجود');
-    const ext = file.name.split('.').pop();
-    const fileName = `${Date.now()}.${ext}`;
-    const filePath = `${path}/${fileName}`;
-    
-    console.log(`رفع الصورة إلى: ${bucket}/${filePath}`);
-    
-    const { error } = await supabase.storage.from(bucket).upload(filePath, file);
-    if (error) {
-      console.error('خطأ في رفع الصورة:', error);
-      throw new Error(`فشل رفع الصورة: ${error.message}`);
-    }
-    const { data } = supabase.storage.from(bucket).getPublicUrl(filePath);
-    return data.publicUrl;
+  const fileToBase64 = (file) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = (error) => reject(error);
+    });
   };
 
   const handleDriverRegistration = async () => {
@@ -83,19 +74,10 @@ export default function Onboarding({ isAdmin, onOpenAdmin }) {
     setError('');
     
     try {
-      // 1. رفع الصور
-      let licenseUrl, vehicleUrl;
-      try {
-        licenseUrl = await uploadPhoto(licensePhoto, 'driver-docs', `licenses/${user.id}`);
-        vehicleUrl = await uploadPhoto(vehiclePhoto, 'driver-docs', `vehicles/${user.id}`);
-      } catch (uploadError) {
-        console.error('فشل رفع الصور:', uploadError);
-        throw new Error(uploadError.message || 'فشل رفع الصور. تأكد من اتصالك وحجم الملف.');
-      }
-      
-      // 2. إرسال بيانات السائق إلى الخادم
+      const licenseBase64 = await fileToBase64(licensePhoto);
+      const vehicleBase64 = await fileToBase64(vehiclePhoto);
+
       const apiUrl = `${import.meta.env.VITE_API_URL}/api/drivers/register`;
-      console.log('جارٍ إرسال الطلب إلى:', apiUrl);
       
       const res = await fetch(apiUrl, {
         method: 'POST',
@@ -103,21 +85,18 @@ export default function Onboarding({ isAdmin, onOpenAdmin }) {
         body: JSON.stringify({ 
           user_id: user.id, 
           ...vehicleInfo, 
-          license_photo_url: licenseUrl, 
-          vehicle_photo_url: vehicleUrl 
+          license_photo: licenseBase64,
+          vehicle_photo: vehicleBase64
         })
       });
       
-      // 3. معالجة الاستجابة
       if (!res.ok) {
         let errorMessage = 'فشل إكمال التسجيل';
         try {
           const data = await res.json();
           errorMessage = data.message || errorMessage;
         } catch (e) {
-          // إذا كانت الاستجابة ليست JSON
-          const text = await res.text();
-          console.error('استجابة غير JSON:', text);
+          console.error('استجابة غير JSON:', e);
         }
         throw new Error(errorMessage);
       }
@@ -126,15 +105,8 @@ export default function Onboarding({ isAdmin, onOpenAdmin }) {
       setUser({ ...user, driver_id: data.driver.id, role: 'driver' });
     } catch (err) {
       console.error('خطأ في تسجيل السائق:', err);
-      
-      // تشخيص إضافي: هل الخطأ من الشبكة أم من الخادم؟
-      if (err.message === 'Failed to fetch' || err.name === 'TypeError') {
-        setError('فشل الاتصال بالخادم. تأكد من اتصالك بالإنترنت أو أن الخادم يعمل.');
-        showAlert('تعذر الاتصال بالخادم. يرجى التحقق من اتصالك بالإنترنت والمحاولة مرة أخرى.');
-      } else {
-        setError(err.message);
-        showAlert(err.message);
-      }
+      setError(err.message);
+      showAlert(err.message);
     } finally {
       setIsSubmitting(false);
     }

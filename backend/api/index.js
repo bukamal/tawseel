@@ -9,7 +9,13 @@ const adminIds = (process.env.ADMIN_TELEGRAM_IDS || '').split(',').map(id => id.
 if (!supabaseUrl || !supabaseKey) throw new Error('Missing Supabase env')
 if (!botToken) throw new Error('Missing BOT_TOKEN')
 
+// عميل Supabase العادي (للاستعلامات التي تحتاج RLS)
 const supabase = createClient(supabaseUrl, supabaseKey, {
+  auth: { autoRefreshToken: false, persistSession: false }
+})
+
+// عميل Supabase الإداري (لتجاوز RLS في رفع الملفات)
+const supabaseAdmin = createClient(supabaseUrl, supabaseKey, {
   auth: { autoRefreshToken: false, persistSession: false }
 })
 
@@ -132,7 +138,7 @@ export default async function handler(req, res) {
         let { telegram_id, chat_id, full_name, username, phone, role } = body
         const finalFullName = full_name || 'مستخدم'
 
-        // ✅ فحص رقم الهاتف قبل التحديث/الإدراج
+        // فحص رقم الهاتف قبل التحديث/الإدراج
         if (phone) {
           const { data: existingPhoneUser } = await supabase
             .from('users')
@@ -190,14 +196,14 @@ export default async function handler(req, res) {
         return res.status(200).json({ success: true })
       }
       if (method === 'POST' && action === 'register') {
-        const { user_id, type, model, color, plate, license, license_photo_url, vehicle_photo_url } = body
+        const { user_id, type, model, color, plate, license, license_photo, vehicle_photo } = body
 
-        // ✅ التحقق من وجود user_id
+        // التحقق من وجود user_id
         if (!user_id) {
           return res.status(400).json({ error: 'user_id_missing', message: 'معرف المستخدم مفقود' })
         }
 
-        // ✅ التحقق من وجود المستخدم
+        // التحقق من وجود المستخدم
         const { data: existingUser, error: userError } = await supabase
           .from('users')
           .select('id')
@@ -207,7 +213,7 @@ export default async function handler(req, res) {
           return res.status(404).json({ error: 'user_not_found', message: 'المستخدم غير موجود' })
         }
 
-        // ✅ التحقق من أن المستخدم ليس لديه حساب سائق بالفعل
+        // التحقق من أن المستخدم ليس لديه حساب سائق بالفعل
         const { data: existingDriver } = await supabase
           .from('drivers')
           .select('id')
@@ -215,6 +221,38 @@ export default async function handler(req, res) {
           .maybeSingle()
         if (existingDriver) {
           return res.status(409).json({ error: 'driver_already_exists', message: 'لديك حساب سائق بالفعل' })
+        }
+
+        let license_photo_url = null
+        let vehicle_photo_url = null
+
+        // دالة مساعدة لرفع الصورة باستخدام العميل الإداري
+        const uploadPhotoAsAdmin = async (base64String, fileName) => {
+          if (!base64String) return null
+          const matches = base64String.match(/^data:image\/([a-zA-Z]+);base64,(.+)$/)
+          if (!matches) throw new Error('Invalid Base64 image')
+          const fileExt = matches[1]
+          const fileData = matches[2]
+          const filePath = `${user_id}/${Date.now()}-${fileName}.${fileExt}`
+
+          const { error } = await supabaseAdmin.storage
+            .from('driver-docs')
+            .upload(filePath, Buffer.from(fileData, 'base64'), {
+              contentType: `image/${fileExt}`,
+              upsert: false
+            })
+
+          if (error) throw error
+          const { data } = supabaseAdmin.storage.from('driver-docs').getPublicUrl(filePath)
+          return data.publicUrl
+        }
+
+        try {
+          license_photo_url = await uploadPhotoAsAdmin(license_photo, 'license')
+          vehicle_photo_url = await uploadPhotoAsAdmin(vehicle_photo, 'vehicle')
+        } catch (uploadError) {
+          console.error('Admin upload error:', uploadError)
+          return res.status(500).json({ error: 'upload_failed', message: uploadError.message })
         }
 
         const { data: driver, error } = await supabase.from('drivers').insert({
