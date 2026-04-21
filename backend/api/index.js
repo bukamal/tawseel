@@ -138,7 +138,6 @@ export default async function handler(req, res) {
         let { telegram_id, chat_id, full_name, username, phone, role } = body
         const finalFullName = full_name || 'مستخدم'
 
-        // فحص رقم الهاتف قبل التحديث/الإدراج
         if (phone) {
           const { data: existingPhoneUser } = await supabase
             .from('users')
@@ -198,12 +197,10 @@ export default async function handler(req, res) {
       if (method === 'POST' && action === 'register') {
         const { user_id, type, model, color, plate, license, license_photo, vehicle_photo } = body
 
-        // التحقق من وجود user_id
         if (!user_id) {
           return res.status(400).json({ error: 'user_id_missing', message: 'معرف المستخدم مفقود' })
         }
 
-        // التحقق من وجود المستخدم
         const { data: existingUser, error: userError } = await supabase
           .from('users')
           .select('id')
@@ -213,7 +210,6 @@ export default async function handler(req, res) {
           return res.status(404).json({ error: 'user_not_found', message: 'المستخدم غير موجود' })
         }
 
-        // التحقق من أن المستخدم ليس لديه حساب سائق بالفعل
         const { data: existingDriver } = await supabase
           .from('drivers')
           .select('id')
@@ -226,7 +222,6 @@ export default async function handler(req, res) {
         let license_photo_url = null
         let vehicle_photo_url = null
 
-        // دالة مساعدة لرفع الصورة باستخدام العميل الإداري
         const uploadPhotoAsAdmin = async (base64String, fileName) => {
           if (!base64String) return null
           const matches = base64String.match(/^data:image\/([a-zA-Z]+);base64,(.+)$/)
