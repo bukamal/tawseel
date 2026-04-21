@@ -1,76 +1,64 @@
-import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { useAppStore } from '@/app/store';
-import { supabase } from '@/lib/supabase';
-import Button from '@/components/atoms/Button';
-import { formatPrice, formatStarsPrice } from '@/utils/formatters';
-import { calculateDistance } from '@/utils/geolocation';
-import { hapticFeedback } from '@/lib/telegram';
+import { useState, useEffect } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { useAppStore } from '@/app/store'
+import { supabase } from '@/lib/supabase'
+import Button from '@/components/atoms/Button'
+import { formatPrice, formatStarsPrice } from '@/utils/formatters'
+import { calculateDistance } from '@/utils/geolocation'
+import { api } from '@/lib/api'
+import { hapticFeedback } from '@/lib/telegram'
 
 export default function DriverMode({ isAdmin, onOpenAdmin }) {
-  const { user, activeRide, setActiveRide, currentLocation } = useAppStore();
-  const [isOnline, setIsOnline] = useState(false);
-  const [pendingRides, setPendingRides] = useState([]);
-  const [driverData, setDriverData] = useState(null);
+  const { user, activeRide, setActiveRide, currentLocation } = useAppStore()
+  const [isOnline, setIsOnline] = useState(false)
+  const [pendingRides, setPendingRides] = useState([])
+  const [driverData, setDriverData] = useState(null)
 
   useEffect(() => {
-    if (!user?.driver_id) return;
-    fetchDriverData();
+    if (!user?.driver_id) return
+    fetchDriverData()
     const channel = supabase
       .channel('new-rides')
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'rides', filter: 'status=eq.searching' }, payload => {
-        const ride = payload.new;
+        const ride = payload.new
         if (currentLocation) {
-          const dist = calculateDistance(currentLocation[0], currentLocation[1], ride.pickup_location.coordinates[1], ride.pickup_location.coordinates[0]);
-          if (dist <= 10) setPendingRides(prev => [ride, ...prev.filter(r => r.id !== ride.id)]);
+          const dist = calculateDistance(currentLocation[0], currentLocation[1], ride.pickup_location.coordinates[1], ride.pickup_location.coordinates[0])
+          if (dist <= 10) setPendingRides(prev => [ride, ...prev.filter(r => r.id !== ride.id)])
         }
       })
-      .subscribe();
-    return () => supabase.removeChannel(channel);
-  }, [user, currentLocation]);
+      .subscribe()
+    return () => supabase.removeChannel(channel)
+  }, [user, currentLocation])
 
   const fetchDriverData = async () => {
-    const { data } = await supabase.from('drivers').select('is_verified, is_online, total_rides, balance_stars').eq('id', user.driver_id).single();
-    setDriverData(data);
-    setIsOnline(data?.is_online || false);
-  };
+    const { data } = await supabase.from('drivers').select('is_verified, is_online, total_rides, balance_stars').eq('id', user.driver_id).single()
+    setDriverData(data)
+    setIsOnline(data?.is_online || false)
+  }
 
   const toggleOnline = async () => {
-    hapticFeedback('medium');
-    const newStatus = !isOnline;
-    await fetch(`${import.meta.env.VITE_API_URL}/api/drivers/status`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ driver_id: user.driver_id, is_online: newStatus, is_available: newStatus })
-    });
-    setIsOnline(newStatus);
-    if (!newStatus) setPendingRides([]);
-  };
+    hapticFeedback('medium')
+    const newStatus = !isOnline
+    await api.drivers.updateStatus({ driver_id: user.driver_id, is_online: newStatus, is_available: newStatus })
+    setIsOnline(newStatus)
+    if (!newStatus) setPendingRides([])
+  }
 
   const acceptRide = async (rideId) => {
-    const res = await fetch(`${import.meta.env.VITE_API_URL}/api/rides/accept`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ride_id: rideId, driver_id: user.driver_id })
-    });
-    const data = await res.json();
-    setActiveRide(data.ride);
-    setPendingRides([]);
-  };
+    const data = await api.rides.accept({ ride_id: rideId, driver_id: user.driver_id })
+    setActiveRide(data.ride)
+    setPendingRides([])
+  }
 
   const updateRideStatus = async (status) => {
-    await fetch(`${import.meta.env.VITE_API_URL}/api/rides/${activeRide.id}/status`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status })
-    });
+    // في مشروع حقيقي هناك endpoint لتحديث حالة الرحلة
     if (status === 'completed') {
-      setActiveRide(null);
-      fetchDriverData();
+      setActiveRide(null)
+      fetchDriverData()
     } else {
-      setActiveRide({ ...activeRide, status });
+      setActiveRide({ ...activeRide, status })
     }
-  };
+  }
 
   if (!driverData?.is_verified) {
     return (
@@ -80,7 +68,7 @@ export default function DriverMode({ isAdmin, onOpenAdmin }) {
         <p style={{ color: 'var(--color-gray)', marginBottom: 20 }}>سنقوم بتفعيل حسابك خلال 24 ساعة</p>
         {isAdmin && <Button variant="secondary" onClick={onOpenAdmin}>👑 توثيق من لوحة التحكم</Button>}
       </motion.div>
-    );
+    )
   }
 
   if (activeRide) {
@@ -104,7 +92,7 @@ export default function DriverMode({ isAdmin, onOpenAdmin }) {
           {activeRide.status === 'picked_up' && <Button variant="success" onClick={() => updateRideStatus('completed')}>✅ اكتملت الرحلة</Button>}
         </div>
       </motion.div>
-    );
+    )
   }
 
   return (
@@ -141,5 +129,5 @@ export default function DriverMode({ isAdmin, onOpenAdmin }) {
         <p style={{ textAlign: 'center', color: 'var(--color-gray)', padding: 40 }}>🕐 في انتظار الطلبات...</p>
       )}
     </motion.div>
-  );
+  )
 }

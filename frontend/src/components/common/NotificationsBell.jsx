@@ -1,37 +1,35 @@
-import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { useAppStore } from '@/app/store';
-import { formatDate } from '@/utils/formatters';
+import { useState, useEffect } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { useAppStore } from '@/app/store'
+import { api } from '@/lib/api'
+import { formatDate } from '@/utils/formatters'
 
 export default function NotificationsBell() {
-  const { user } = useAppStore();
-  const [notifications, setNotifications] = useState([]);
-  const [unread, setUnread] = useState(0);
-  const [open, setOpen] = useState(false);
+  const { user } = useAppStore()
+  const [notifications, setNotifications] = useState([])
+  const [unread, setUnread] = useState(0)
+  const [open, setOpen] = useState(false)
 
   useEffect(() => {
-    if (!user) return;
-    fetchNotifications();
-    const i = setInterval(fetchNotifications, 30000);
-    return () => clearInterval(i);
-  }, [user]);
+    if (!user) return
+    fetchNotifications()
+    const i = setInterval(fetchNotifications, 30000)
+    return () => clearInterval(i)
+  }, [user])
 
   const fetchNotifications = async () => {
-    const res = await fetch(`${import.meta.env.VITE_API_URL}/api/notifications?user_id=${user.id}`);
-    const data = await res.json();
-    setNotifications(data.notifications);
-    setUnread(data.unread_count);
-  };
+    try {
+      const data = await api.notifications.get()
+      setNotifications(data.notifications)
+      setUnread(data.unread_count)
+    } catch (e) { console.error(e) }
+  }
 
   const markAsRead = async (id) => {
-    await fetch(`${import.meta.env.VITE_API_URL}/api/notifications?user_id=${user.id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ notification_id: id })
-    });
-    setNotifications(prev => prev.map(n => n.id === id ? { ...n, is_read: true } : n));
-    setUnread(p => Math.max(0, p - 1));
-  };
+    await api.notifications.markAsRead(id)
+    setNotifications(prev => prev.map(n => n.id === id ? { ...n, is_read: true } : n))
+    setUnread(p => Math.max(0, p - 1))
+  }
 
   return (
     <div style={{ position: 'relative' }}>
@@ -81,5 +79,5 @@ export default function NotificationsBell() {
         )}
       </AnimatePresence>
     </div>
-  );
+  )
 }

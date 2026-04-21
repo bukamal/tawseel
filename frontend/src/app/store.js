@@ -1,5 +1,5 @@
-import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { create } from 'zustand'
+import { persist } from 'zustand/middleware'
 
 export const useAppStore = create(
   persist(
@@ -15,9 +15,9 @@ export const useAppStore = create(
       nearbyDrivers: [],
       selectedVehicle: 'economy',
 
-      setUser: (user) => set({ 
-        user, 
-        isOnboarding: user ? (user.role === 'driver' ? !user.driver_id : !user.phone) : true 
+      setUser: (user) => set({
+        user,
+        isOnboarding: user ? (user.role === 'driver' ? !user.driver_id : !user.phone) : true
       }),
       setLocation: (location) => set({ currentLocation: location }),
       setPickup: (location) => set({ pickupLocation: location }),
@@ -25,10 +25,10 @@ export const useAppStore = create(
       setActiveRide: (ride) => set({ activeRide: ride }),
       setNearbyDrivers: (drivers) => set({ nearbyDrivers: drivers }),
       setSelectedVehicle: (type) => set({ selectedVehicle: type }),
-      
+
       updateRideStatus: (status) => {
-        const ride = get().activeRide;
-        if (ride) set({ activeRide: { ...ride, status } });
+        const ride = get().activeRide
+        if (ride) set({ activeRide: { ...ride, status } })
       },
 
       resetRide: () => set({
@@ -51,4 +51,4 @@ export const useAppStore = create(
       partialize: (state) => ({ user: state.user })
     }
   )
-);
+)

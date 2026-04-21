@@ -1,36 +1,35 @@
-import { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
-import L from 'leaflet';
-import 'leaflet/dist/leaflet.css';
-import Button from '@/components/atoms/Button';
-import { hapticFeedback } from '@/lib/telegram';
+import { useState } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet'
+import L from 'leaflet'
+import 'leaflet/dist/leaflet.css'
+import Button from '@/components/atoms/Button'
+import { hapticFeedback } from '@/lib/telegram'
 
-const pickupIcon = new L.Icon({ iconUrl: '/assets/pickup-marker.svg', iconSize: [35, 45], iconAnchor: [17, 45] });
-const dropoffIcon = new L.Icon({ iconUrl: '/assets/dropoff-marker.svg', iconSize: [35, 45], iconAnchor: [17, 45] });
+const pickupIcon = new L.Icon({ iconUrl: '/assets/pickup-marker.svg', iconSize: [35, 45], iconAnchor: [17, 45] })
+const dropoffIcon = new L.Icon({ iconUrl: '/assets/dropoff-marker.svg', iconSize: [35, 45], iconAnchor: [17, 45] })
 
 const AddressSearch = ({ onSelect, placeholder }) => {
-  const [query, setQuery] = useState('');
-  const [results, setResults] = useState([]);
-  const [searching, setSearching] = useState(false);
+  const [query, setQuery] = useState('')
+  const [results, setResults] = useState([])
+  const [searching, setSearching] = useState(false)
 
   const search = async (q) => {
-    if (q.length < 3) return setResults([]);
-    setSearching(true);
+    if (q.length < 3) return setResults([])
+    setSearching(true)
     try {
-      const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&addressdetails=1&limit=5&countrycodes=sy&accept-language=ar`);
-      setResults(await res.json());
-    } finally { setSearching(false); }
-  };
+      const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&addressdetails=1&limit=5&countrycodes=sy&accept-language=ar`)
+      setResults(await res.json())
+    } finally { setSearching(false) }
+  }
 
   return (
     <div style={{ position: 'relative' }}>
       <input
         type="text"
         value={query}
-        onChange={e => { setQuery(e.target.value); search(e.target.value); }}
+        onChange={e => { setQuery(e.target.value); search(e.target.value) }}
         placeholder={placeholder}
-        style={{ width: '100%', padding: 14, border: '1px solid #E0E0E0', borderRadius: 12 }}
       />
       <AnimatePresence>
         {searching && (
@@ -43,7 +42,7 @@ const AddressSearch = ({ onSelect, placeholder }) => {
             {results.map((r, i) => (
               <div
                 key={i}
-                onClick={() => { onSelect({ lat: parseFloat(r.lat), lng: parseFloat(r.lon), address: r.display_name }); setQuery(''); setResults([]); }}
+                onClick={() => { onSelect({ lat: parseFloat(r.lat), lng: parseFloat(r.lon), address: r.display_name }); setQuery(''); setResults([]) }}
                 style={{ padding: 12, borderBottom: '1px solid #F0F0F0', cursor: 'pointer' }}
               >
                 <span>📍</span> {r.display_name}
@@ -53,22 +52,22 @@ const AddressSearch = ({ onSelect, placeholder }) => {
         )}
       </AnimatePresence>
     </div>
-  );
-};
+  )
+}
 
 const MapController = ({ onSelect }) => {
   useMapEvents({
     click(e) {
-      onSelect({ lat: e.latlng.lat, lng: e.latlng.lng, address: `${e.latlng.lat},${e.latlng.lng}` });
+      onSelect({ lat: e.latlng.lat, lng: e.latlng.lng, address: `${e.latlng.lat},${e.latlng.lng}` })
     }
-  });
-  return null;
-};
+  })
+  return null
+}
 
 export default function LocationPicker({ type, initialLocation, onSelect, onClose, currentLocation }) {
-  const [temp, setTemp] = useState(initialLocation);
-  const center = temp ? [temp.lat, temp.lng] : (currentLocation || [33.5138, 36.2765]);
-  const icon = type === 'pickup' ? pickupIcon : dropoffIcon;
+  const [temp, setTemp] = useState(initialLocation)
+  const center = temp ? [temp.lat, temp.lng] : (currentLocation || [33.5138, 36.2765])
+  const icon = type === 'pickup' ? pickupIcon : dropoffIcon
 
   return (
     <AnimatePresence>
@@ -96,9 +95,8 @@ export default function LocationPicker({ type, initialLocation, onSelect, onClos
                 draggable
                 eventHandlers={{
                   dragend(e) {
-                    const m = e.target;
-                    const pos = m.getLatLng();
-                    setTemp({ lat: pos.lat, lng: pos.lng, address: `${pos.lat},${pos.lng}` });
+                    const pos = e.target.getLatLng()
+                    setTemp({ lat: pos.lat, lng: pos.lng, address: `${pos.lat},${pos.lng}` })
                   }
                 }}
               />
@@ -117,9 +115,9 @@ export default function LocationPicker({ type, initialLocation, onSelect, onClos
               <Button
                 variant="primary"
                 onClick={() => {
-                  hapticFeedback('medium');
-                  onSelect({ coordinates: [temp.lat, temp.lng], address: temp.address });
-                  onClose();
+                  hapticFeedback('medium')
+                  onSelect({ coordinates: [temp.lat, temp.lng], address: temp.address })
+                  onClose()
                 }}
               >
                 ✅ تأكيد الموقع
@@ -129,5 +127,5 @@ export default function LocationPicker({ type, initialLocation, onSelect, onClos
         </AnimatePresence>
       </motion.div>
     </AnimatePresence>
-  );
+  )
 }
