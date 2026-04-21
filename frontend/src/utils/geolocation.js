@@ -6,18 +6,7 @@ export const calculateDistance = (lat1, lng1, lat2, lng2) => {
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a))
 }
 
-export const convertToStars = (sar) => {
-  const usd = sar * 0.27
+export const convertToStars = (priceSYP) => {
+  const usd = priceSYP / 15000
   return Math.max(Math.ceil(usd * 77), 10)
-}
-
-export const getCurrentPosition = () => {
-  return new Promise((resolve, reject) => {
-    if (!navigator.geolocation) return reject(new Error('Geolocation not supported'))
-    navigator.geolocation.getCurrentPosition(
-      (pos) => resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude, accuracy: pos.coords.accuracy }),
-      reject,
-      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
-    )
-  })
 }

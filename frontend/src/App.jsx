@@ -40,10 +40,8 @@ function App() {
     const data = await api.users.get(telegramId)
     if (data.user) {
       setUser(data.user)
-      // التحقق من صلاحية المشرف (يتم جلبها من الخادم فقط)
-      const isUserAdmin = data.user.role === 'admin'
-      setIsAdmin(isUserAdmin)
-      if (isUserAdmin) setShowAdmin(true)
+      setIsAdmin(data.user.role === 'admin')
+      if (data.user.role === 'admin') setShowAdmin(true)
     }
   }
 
@@ -60,17 +58,9 @@ function App() {
     }
   }
 
-  if (appError) {
-    return <div style={{ color: 'white', padding: 20 }}>خطأ: {appError}</div>
-  }
-
-  if (showAdmin && isAdmin) {
-    return <AdminDashboard onClose={() => setShowAdmin(false)} />
-  }
-
-  if (isOnboarding) {
-    return <Onboarding isAdmin={isAdmin} onOpenAdmin={() => setShowAdmin(true)} />
-  }
+  if (appError) return <div style={{ padding: 20 }}>خطأ: {appError}</div>
+  if (showAdmin && isAdmin) return <AdminDashboard onClose={() => setShowAdmin(false)} />
+  if (isOnboarding) return <Onboarding isAdmin={isAdmin} onOpenAdmin={() => setShowAdmin(true)} />
 
   return (
     <div className="app">
@@ -81,19 +71,9 @@ function App() {
           <button className="icon-btn" onClick={() => useAppStore.getState().logout()}>🚪</button>
         </div>
       </div>
-
-      <div className="map-container">
-        <Map />
-      </div>
-
+      <div className="map-container"><Map /></div>
       <div className="bottom-sheet">
-        {user?.role === 'driver' ? (
-          <DriverMode isAdmin={isAdmin} onOpenAdmin={() => setShowAdmin(true)} />
-        ) : activeRide ? (
-          <ActiveRide />
-        ) : (
-          <RideRequest />
-        )}
+        {user?.role === 'driver' ? <DriverMode isAdmin={isAdmin} onOpenAdmin={() => setShowAdmin(true)} /> : activeRide ? <ActiveRide /> : <RideRequest />}
       </div>
     </div>
   )

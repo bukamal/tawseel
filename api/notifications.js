@@ -2,10 +2,11 @@ import { supabaseAdmin } from './_lib/supabase.js'
 import { getCurrentUser } from './_lib/auth.js'
 
 export default async function handler(req, res) {
-  const user = await getCurrentUser(req.headers.get('x-telegram-init-data'))
+  const initData = req.headers.get('x-telegram-init-data')
+  const user = await getCurrentUser(initData)
   if (!user) return res.status(401).json({ error: 'Unauthorized' })
 
-  const { method, query, body } = req
+  const { method, body } = req
 
   if (method === 'GET') {
     const { data } = await supabaseAdmin

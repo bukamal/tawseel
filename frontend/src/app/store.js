@@ -6,8 +6,6 @@ export const useAppStore = create(
     (set, get) => ({
       user: null,
       isOnboarding: true,
-      isLoading: false,
-      error: null,
       currentLocation: null,
       pickupLocation: null,
       dropoffLocation: null,
@@ -25,19 +23,16 @@ export const useAppStore = create(
       setActiveRide: (ride) => set({ activeRide: ride }),
       setNearbyDrivers: (drivers) => set({ nearbyDrivers: drivers }),
       setSelectedVehicle: (type) => set({ selectedVehicle: type }),
-
       updateRideStatus: (status) => {
         const ride = get().activeRide
         if (ride) set({ activeRide: { ...ride, status } })
       },
-
       resetRide: () => set({
         activeRide: null,
         pickupLocation: null,
         dropoffLocation: null,
         nearbyDrivers: []
       }),
-
       logout: () => set({
         user: null,
         isOnboarding: true,
@@ -46,9 +41,6 @@ export const useAppStore = create(
         dropoffLocation: null
       })
     }),
-    {
-      name: 'tawseel-storage',
-      partialize: (state) => ({ user: state.user })
-    }
+    { name: 'tawseel-storage', partialize: (state) => ({ user: state.user }) }
   )
 )

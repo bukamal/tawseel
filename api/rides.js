@@ -17,7 +17,6 @@ function estimateFare(distanceKm, vehicleType = 'economy') {
 }
 
 function convertToStars(priceSYP) {
-  // سعر الصرف التقريبي: 1 دولار ≈ 15000 ليرة سورية
   const usd = priceSYP / 15000
   return Math.max(Math.ceil(usd * 77), 10)
 }

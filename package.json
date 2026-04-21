@@ -10,8 +10,5 @@
     "@supabase/supabase-js": "^2.39.0",
     "zod": "^3.22.0",
     "@telegram-apps/init-data-node": "^1.0.0"
-  },
-  "devDependencies": {
-    "dotenv": "^16.0.0"
   }
 }

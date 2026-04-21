@@ -7,7 +7,6 @@ if (!supabaseUrl || !supabaseKey) {
   throw new Error('Missing Supabase environment variables')
 }
 
-// عميل مع صلاحيات الخدمة (يستخدم فقط في الخلفية)
 export const supabaseAdmin = createClient(supabaseUrl, supabaseKey, {
   auth: { autoRefreshToken: false, persistSession: false }
 })

@@ -16,7 +16,6 @@ export const DriverRegisterSchema = z.object({
   color: z.string().optional(),
   plate: z.string().min(1),
   license: z.string().min(1),
-  // حقول الصور ستكون اختيارية هنا لأننا سنستخدم signed URLs
   license_photo_url: z.string().url().optional(),
   vehicle_photo_url: z.string().url().optional()
 })

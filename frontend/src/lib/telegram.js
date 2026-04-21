@@ -1,15 +1,13 @@
 export const initTelegram = () => {
   const tg = window.Telegram?.WebApp
   if (!tg) return null
-  
   tg.ready()
   tg.expand()
-  
   return {
     tg,
     user: tg.initDataUnsafe?.user,
     telegramId: tg.initDataUnsafe?.user?.id,
-    initData: tg.initData // هذا هو المهم لإرساله في الهيدر
+    initData: tg.initData
   }
 }
 

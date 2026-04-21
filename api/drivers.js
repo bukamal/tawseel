@@ -1,5 +1,5 @@
 import { supabaseAdmin } from './_lib/supabase.js'
-import { getCurrentUser, authorizeAdmin } from './_lib/auth.js'
+import { getCurrentUser } from './_lib/auth.js'
 import { DriverRegisterSchema } from './_lib/validation.js'
 
 export default async function handler(req, res) {
@@ -7,7 +7,6 @@ export default async function handler(req, res) {
   const segments = url.split('/').filter(s => s)
   const action = segments[2]
 
-  // GET /api/drivers/nearby
   if (method === 'GET' && action === 'nearby') {
     const { lat, lng, radius = '5000' } = query
     const { data } = await supabaseAdmin.rpc('nearby_drivers', {
@@ -18,7 +17,6 @@ export default async function handler(req, res) {
     return res.status(200).json({ drivers: data || [] })
   }
 
-  // POST /api/drivers/location
   if (method === 'POST' && action === 'location') {
     const { driver_id, lat, lng, heading, speed } = body
     await supabaseAdmin
@@ -33,17 +31,14 @@ export default async function handler(req, res) {
     return res.status(200).json({ success: true })
   }
 
-  // POST /api/drivers/register
   if (method === 'POST' && action === 'register') {
     try {
       const validated = DriverRegisterSchema.parse(body)
       const { user_id, type, model, color, plate, license, license_photo_url, vehicle_photo_url } = validated
 
-      // تحقق من وجود المستخدم
       const { data: user } = await supabaseAdmin.from('users').select('id').eq('id', user_id).single()
       if (!user) return res.status(404).json({ error: 'user_not_found' })
 
-      // تحقق من عدم وجود سائق بالفعل
       const { data: existing } = await supabaseAdmin.from('drivers').select('id').eq('user_id', user_id).maybeSingle()
       if (existing) return res.status(409).json({ error: 'driver_already_exists' })
 
@@ -76,18 +71,17 @@ export default async function handler(req, res) {
     }
   }
 
-  // PATCH /api/drivers/status
   if (method === 'PATCH' && action === 'status') {
     const { driver_id, is_online, is_available } = body
     await supabaseAdmin.from('drivers').update({ is_online, is_available }).eq('id', driver_id)
     return res.status(200).json({ success: true })
   }
 
-  // توليد signed URL لرفع الصور
   if (method === 'POST' && action === 'upload-url') {
-    const user = await getCurrentUser(req.headers.get('x-telegram-init-data'))
+    const initData = req.headers.get('x-telegram-init-data')
+    const user = await getCurrentUser(initData)
     if (!user) return res.status(401).json({ error: 'Unauthorized' })
-    
+
     const { fileName, fileType } = body
     const filePath = `${user.id}/${Date.now()}-${fileName}`
     const { data, error } = await supabaseAdmin.storage

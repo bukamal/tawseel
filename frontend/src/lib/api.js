@@ -62,6 +62,23 @@ export const api = {
       body: JSON.stringify(data)
     })
   },
+  ratings: {
+    create: (data) => fetch(`${API_URL}/api/ratings/create`, {
+      method: 'POST',
+      headers: headers(),
+      body: JSON.stringify(data)
+    }).then(r => r.json())
+  },
+  notifications: {
+    get: () => fetch(`${API_URL}/api/notifications`, {
+      headers: headers()
+    }).then(r => r.json()),
+    markAsRead: (notificationId) => fetch(`${API_URL}/api/notifications`, {
+      method: 'PATCH',
+      headers: headers(),
+      body: JSON.stringify({ notification_id: notificationId })
+    })
+  },
   admin: {
     pendingDrivers: () => fetch(`${API_URL}/api/admin/drivers/pending`, {
       headers: headers()

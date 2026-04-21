@@ -1,11 +1,10 @@
 import { supabaseAdmin } from './_lib/supabase.js'
-import { getCurrentUser } from './_lib/auth.js'
 import { UserUpdateSchema } from './_lib/validation.js'
 
 export default async function handler(req, res) {
-  const { method, url } = req
+  const { method, url, body } = req
   const segments = url.split('/').filter(s => s)
-  const telegramId = segments[2] // /api/users/:telegramId
+  const telegramId = segments[2]
 
   if (method === 'GET' && telegramId) {
     const { data: user } = await supabaseAdmin
@@ -18,11 +17,9 @@ export default async function handler(req, res) {
 
   if (method === 'POST' && segments[2] === 'update') {
     try {
-      const body = req.body
       const validated = UserUpdateSchema.parse(body)
       const { telegram_id, chat_id, full_name, username, phone, role } = validated
 
-      // تحقق من عدم وجود هاتف مستخدم
       if (phone) {
         const { data: existing } = await supabaseAdmin
           .from('users')

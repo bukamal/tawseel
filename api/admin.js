@@ -3,7 +3,6 @@ import { authorizeAdmin } from './_lib/auth.js'
 import { sendMessage } from './_lib/telegram.js'
 
 export default async function handler(req, res) {
-  // تحقق من صلاحية المشرف
   const isAdmin = await authorizeAdmin(req)
   if (!isAdmin) return res.status(403).json({ error: 'Forbidden' })
 

@@ -1,20 +1,17 @@
 import { supabaseAdmin } from './_lib/supabase.js'
 import { sendMessage, answerPreCheckoutQuery, answerCallbackQuery } from './_lib/telegram.js'
 
-const BOT_TOKEN = process.env.BOT_TOKEN
 const FRONTEND_URL = process.env.FRONTEND_URL
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).end()
   const payload = req.body
 
-  // Pre-checkout query
   if (payload.pre_checkout_query) {
     await answerPreCheckoutQuery(payload.pre_checkout_query.id, true)
     return res.status(200).json({ ok: true })
   }
 
-  // Successful payment
   if (payload.message?.successful_payment) {
     const payment = payload.message.successful_payment
     const chatId = payload.message.chat.id
@@ -37,7 +34,6 @@ export default async function handler(req, res) {
     return res.status(200).json({ ok: true })
   }
 
-  // Handle /start command
   if (payload.message?.text === '/start') {
     const chatId = payload.message.chat.id
     const telegramId = payload.message.from.id
@@ -69,7 +65,6 @@ export default async function handler(req, res) {
     })
   }
 
-  // Handle callback queries
   if (payload.callback_query) {
     const q = payload.callback_query
     await answerCallbackQuery(q.id)

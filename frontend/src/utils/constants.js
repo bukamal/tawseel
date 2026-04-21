@@ -8,18 +8,5 @@ export const VEHICLE_TYPES = [
 
 export const MAP_CONFIG = {
   defaultCenter: [33.5138, 36.2765],
-  defaultZoom: 13,
-  maxZoom: 18,
-  minZoom: 8
-}
-
-export const RIDE_STATUS = {
-  PENDING: 'pending',
-  SEARCHING: 'searching',
-  ACCEPTED: 'accepted',
-  ARRIVED: 'arrived',
-  PICKED_UP: 'picked_up',
-  IN_PROGRESS: 'in_progress',
-  COMPLETED: 'completed',
-  CANCELLED: 'cancelled'
+  defaultZoom: 13
 }

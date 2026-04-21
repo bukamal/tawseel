@@ -13,16 +13,11 @@
   --color-gray-light: #F2F2F7;
   --color-background: #F9F9FB;
   --color-surface: #FFFFFF;
-  --spacing-xs: 4px;
-  --spacing-sm: 8px;
   --spacing-md: 16px;
   --spacing-lg: 24px;
-  --spacing-xl: 32px;
   --radius-md: 12px;
   --radius-lg: 16px;
-  --shadow-sm: 0 2px 8px rgba(0,0,0,0.05);
   --shadow-md: 0 4px 12px rgba(0,0,0,0.1);
-  --transition: all 0.2s ease;
 }
 
 .dark {
@@ -33,19 +28,8 @@
   --color-dark: #FFFFFF;
 }
 
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
-body {
-  font-family: 'Inter', system-ui, sans-serif;
-  background-color: var(--color-background);
-  color: var(--color-dark);
-  line-height: 1.5;
-  -webkit-font-smoothing: antialiased;
-}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Inter', sans-serif; background: var(--color-background); color: var(--color-dark); }
 
 .app {
   display: flex;
@@ -53,20 +37,16 @@ body {
   height: 100dvh;
   max-width: 500px;
   margin: 0 auto;
-  background-color: var(--color-background);
-  position: relative;
+  background: var(--color-background);
 }
 
 .top-bar {
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
+  top: 0; left: 0; right: 0;
   padding: var(--spacing-md) var(--spacing-lg);
   padding-top: max(var(--spacing-md), env(safe-area-inset-top));
   display: flex;
   justify-content: space-between;
-  align-items: center;
   z-index: 1000;
   pointer-events: none;
 }
@@ -87,11 +67,7 @@ body {
   font-size: 20px;
 }
 
-.map-container {
-  flex: 1;
-  width: 100%;
-  background: #ddd;
-}
+.map-container { flex: 1; width: 100%; background: #ddd; }
 
 .bottom-sheet {
   background: var(--color-surface);
@@ -120,7 +96,6 @@ body {
   gap: var(--spacing-md);
   cursor: pointer;
   border: 1px solid transparent;
-  transition: var(--transition);
 }
 
 .location-card.selected {
@@ -149,7 +124,6 @@ body {
   text-align: center;
   cursor: pointer;
   border: 1px solid transparent;
-  transition: var(--transition);
 }
 
 .vehicle-card.active {
@@ -166,7 +140,6 @@ input, select, textarea {
   margin-bottom: var(--spacing-md);
   background: var(--color-surface);
   color: var(--color-dark);
-  transition: var(--transition);
 }
 
 input:focus, select:focus, textarea:focus {
@@ -184,12 +157,5 @@ input:focus, select:focus, textarea:focus {
   margin: 20px auto;
 }
 
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
-.error {
-  color: var(--color-danger);
-  font-size: 14px;
-  margin-bottom: var(--spacing-md);
-}
+@keyframes spin { to { transform: rotate(360deg); } }
+.error { color: var(--color-danger); font-size: 14px; margin-bottom: var(--spacing-md); }
