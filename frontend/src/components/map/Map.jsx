@@ -1,5 +1,5 @@
 import { useEffect, useMemo } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, Circle, Polyline } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, Circle, Polyline, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { useAppStore } from '@/app/store';
@@ -17,10 +17,13 @@ const driverIcon = new L.Icon({ iconUrl: '/assets/driver-marker.svg', iconSize: 
 const pickupIcon = new L.Icon({ iconUrl: '/assets/pickup-marker.svg', iconSize: [35, 45], iconAnchor: [17, 45] });
 const dropoffIcon = new L.Icon({ iconUrl: '/assets/dropoff-marker.svg', iconSize: [35, 45], iconAnchor: [17, 45] });
 
+// مكون منفصل للتحكم بالخريطة (يستخدم useMap)
 const MapController = ({ center, zoom }) => {
   const map = useMap();
   useEffect(() => {
-    if (center && center[0] !== 0) map.setView(center, zoom);
+    if (center && center[0] !== 0) {
+      map.setView(center, zoom);
+    }
   }, [center, zoom, map]);
   return null;
 };

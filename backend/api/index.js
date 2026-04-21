@@ -9,12 +9,10 @@ const adminIds = (process.env.ADMIN_TELEGRAM_IDS || '').split(',').map(id => id.
 if (!supabaseUrl || !supabaseKey) throw new Error('Missing Supabase env')
 if (!botToken) throw new Error('Missing BOT_TOKEN')
 
-// عميل Supabase العادي (للاستعلامات التي تحتاج RLS)
 const supabase = createClient(supabaseUrl, supabaseKey, {
   auth: { autoRefreshToken: false, persistSession: false }
 })
 
-// عميل Supabase الإداري (لتجاوز RLS في رفع الملفات)
 const supabaseAdmin = createClient(supabaseUrl, supabaseKey, {
   auth: { autoRefreshToken: false, persistSession: false }
 })
@@ -225,7 +223,7 @@ export default async function handler(req, res) {
         const uploadPhotoAsAdmin = async (base64String, fileName) => {
           if (!base64String) return null
           const matches = base64String.match(/^data:image\/([a-zA-Z]+);base64,(.+)$/)
-          if (!matches) throw new Error('Invalid Base64 image')
+          if (!matches) throw new Error('صيغة الصورة غير صالحة')
           const fileExt = matches[1]
           const fileData = matches[2]
           const filePath = `${user_id}/${Date.now()}-${fileName}.${fileExt}`
@@ -237,7 +235,10 @@ export default async function handler(req, res) {
               upsert: false
             })
 
-          if (error) throw error
+          if (error) {
+            console.error('Supabase Storage upload error:', error)
+            throw new Error(`فشل رفع الملف: ${error.message}`)
+          }
           const { data } = supabaseAdmin.storage.from('driver-docs').getPublicUrl(filePath)
           return data.publicUrl
         }
