@@ -20,8 +20,9 @@
   .location-card {
     @apply flex items-center gap-3 p-4 bg-gray-light rounded-md mb-3 cursor-pointer transition-base active:scale-[0.99];
   }
+  /* استخدم opacity بدلاً من /10 */
   .location-card.selected {
-    @apply bg-primary/10 border-2 border-primary;
+    @apply bg-primary border-2 border-primary opacity-10;
   }
   .price-card {
     @apply bg-surface rounded-lg p-4 my-4 border border-black/5 dark:border-white/10;
