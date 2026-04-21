@@ -4,56 +4,16 @@
 
 @import './variables.css';
 
-@layer base {
-  body {
-    @apply font-sans text-dark bg-background antialiased overflow-hidden;
-  }
-  button {
-    @apply font-sans;
-  }
+body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background-color: #F2F2F7;
+  color: #1C1C1E;
+  -webkit-font-smoothing: antialiased;
 }
 
-@layer components {
-  .card {
-    @apply bg-surface rounded-lg p-4 shadow-sm border border-black border-opacity-5 dark:border-white dark:border-opacity-10;
-  }
-  .location-card {
-    @apply flex items-center gap-3 p-4 bg-gray-light rounded-md mb-3 cursor-pointer transition-base active:scale-[0.99];
-  }
-  .location-card.selected {
-    @apply bg-primary opacity-10 border-2 border-primary;
-  }
-  .price-card {
-    @apply bg-surface rounded-lg p-4 my-4 border border-black border-opacity-5 dark:border-white dark:border-opacity-10;
-  }
-  .price-row {
-    @apply flex justify-between py-1 text-gray;
-  }
-  .price-total {
-    @apply text-2xl font-bold text-primary text-center mt-3;
-  }
-  .icon-btn {
-    @apply w-11 h-11 rounded-full bg-surface opacity-80 backdrop-blur-lg border-none shadow-md flex items-center justify-center text-xl cursor-pointer text-dark transition-base active:scale-[0.92] active:shadow-sm;
-  }
-  .spinner {
-    @apply inline-block w-6 h-6 border-[3px] border-gray-light border-t-primary rounded-full animate-spin;
-  }
-}
-
-@layer utilities {
-  .transition-base {
-    transition: all var(--transition-base);
-  }
-  .transition-fast {
-    transition: all var(--transition-fast);
-  }
-  .transition-slow {
-    transition: all var(--transition-slow);
-  }
-  .pt-safe {
-    padding-top: var(--safe-area-top);
-  }
-  .pb-safe {
-    padding-bottom: var(--safe-area-bottom);
-  }
+.dark body {
+  background-color: #000000;
+  color: #FFFFFF;
 }
