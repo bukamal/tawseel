@@ -5,7 +5,6 @@ import 'leaflet/dist/leaflet.css';
 import { useAppStore } from '@/app/store';
 import { MAP_CONFIG } from '@/utils/constants';
 
-// إصلاح أيقونات Leaflet
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
@@ -17,7 +16,6 @@ const driverIcon = new L.Icon({ iconUrl: '/assets/driver-marker.svg', iconSize: 
 const pickupIcon = new L.Icon({ iconUrl: '/assets/pickup-marker.svg', iconSize: [35, 45], iconAnchor: [17, 45] });
 const dropoffIcon = new L.Icon({ iconUrl: '/assets/dropoff-marker.svg', iconSize: [35, 45], iconAnchor: [17, 45] });
 
-// مكون منفصل للتحكم بالخريطة (يستخدم useMap)
 const MapController = ({ center, zoom }) => {
   const map = useMap();
   useEffect(() => {

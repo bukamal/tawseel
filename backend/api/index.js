@@ -167,7 +167,14 @@ export default async function handler(req, res) {
           return res.status(500).json({ error: error.message })
         }
 
-        return res.status(200).json({ user })
+        // جلب بيانات المستخدم كاملة مع drivers
+        const { data: fullUser } = await supabase
+          .from('users')
+          .select('*, drivers(*)')
+          .eq('id', user.id)
+          .single()
+
+        return res.status(200).json({ user: { ...fullUser, driver_id: fullUser?.drivers?.[0]?.id } })
       }
     }
 
@@ -235,10 +242,7 @@ export default async function handler(req, res) {
               upsert: false
             })
 
-          if (error) {
-            console.error('Supabase Storage upload error:', error)
-            throw new Error(`فشل رفع الملف: ${error.message}`)
-          }
+          if (error) throw error
           const { data } = supabaseAdmin.storage.from('driver-docs').getPublicUrl(filePath)
           return data.publicUrl
         }

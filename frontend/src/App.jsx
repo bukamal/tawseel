@@ -43,7 +43,6 @@ function App() {
       const adminIds = (import.meta.env.VITE_ADMIN_TELEGRAM_IDS || '').split(',');
       const admin = data.user.role === 'admin' || adminIds.includes(String(telegramId));
       setIsAdmin(admin);
-      // ✅ توجيه المشرف تلقائياً إلى لوحة التحكم
       if (admin) {
         setShowAdmin(true);
       }
@@ -71,12 +70,10 @@ function App() {
     return <div style={{ color: 'white', padding: 20 }}>خطأ: {appError}</div>;
   }
 
-  // ✅ عرض لوحة التحكم تلقائياً للمشرف
   if (showAdmin && isAdmin) {
     return <AdminDashboard onClose={() => setShowAdmin(false)} />;
   }
 
-  // إذا لم يكن المشرف في وضع اللوحة، نعرض التدفق الطبيعي
   if (isOnboarding) return <Onboarding isAdmin={isAdmin} onOpenAdmin={() => setShowAdmin(true)} />;
 
   return (

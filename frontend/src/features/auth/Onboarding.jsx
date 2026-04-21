@@ -48,7 +48,15 @@ export default function Onboarding({ isAdmin, onOpenAdmin }) {
       }
       
       setUser(data.user);
-      if (role === 'driver') setStep(3);
+      
+      // إذا كان سائقاً ولديه driver_id بالفعل، لا تذهب إلى step 3
+      if (role === 'driver') {
+        if (data.user.driver_id) {
+          // لا شيء، سيتم إخفاء الـ onboarding تلقائياً
+        } else {
+          setStep(3);
+        }
+      }
     } catch (err) {
       setError(err.message);
       showAlert(err.message);
